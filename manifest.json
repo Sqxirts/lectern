@@ -1,0 +1,9 @@
+{
+	"id": "vault-scope",
+	"name": "Vault Scope",
+	"version": "0.1.0",
+	"minAppVersion": "1.5.0",
+	"description": "Preview docx/xlsx/pptx and 60+ code files. Selectable pptx text, zoom, edit and save, and Word-style margin comments stored as markdown in your vault.",
+	"author": "sqxirts",
+	"isDesktopOnly": false
+}

@@ -1,0 +1,521 @@
+/* Vault Scope
+   Colours come from Obsidian's own variables so the plugin follows whatever
+   theme is active, light or dark, instead of fighting it. The one opinion is
+   the amber accent used for highlights and comment cards. */
+
+.vault-scope-container {
+	--vault-scope-rail-width: 260px;
+	--vault-scope-accent: #b4772b;
+	--vault-scope-accent-soft: rgba(180, 119, 43, 0.22);
+	--vault-scope-accent-flash: rgba(180, 119, 43, 0.55);
+
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	position: relative;
+	padding: 0;
+	background: var(--background-primary);
+}
+
+.theme-dark .vault-scope-container {
+	--vault-scope-accent: #d9a05b;
+	--vault-scope-accent-soft: rgba(217, 160, 91, 0.26);
+	--vault-scope-accent-flash: rgba(217, 160, 91, 0.6);
+}
+
+/* ---------- toolbar ---------- */
+
+.vault-scope-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+	flex-shrink: 0;
+	padding: 6px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+
+.vault-scope-toolbar-group {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.vault-scope-toolbar-sep {
+	width: 1px;
+	height: 18px;
+	margin: 0 4px;
+	background: var(--background-modifier-border);
+}
+
+.vault-scope-toolbar-btn {
+	padding: 4px 10px;
+	height: 28px;
+	border: none;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--text-muted);
+	font-size: 13px;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: none;
+}
+
+.vault-scope-toolbar-btn:hover:not(:disabled) {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.vault-scope-toolbar-btn.is-active {
+	background: var(--vault-scope-accent-soft);
+	color: var(--text-normal);
+}
+
+.vault-scope-toolbar-btn:disabled {
+	opacity: 0.55;
+	cursor: default;
+}
+
+/* ---------- scroll + zoom ---------- */
+
+.vault-scope-wrapper {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+	padding: 16px;
+	padding-right: calc(var(--vault-scope-rail-width, 260px) + 32px);
+}
+
+.vault-scope-wrapper.is-panning {
+	cursor: grabbing;
+}
+
+.vault-scope-sizer {
+	position: relative;
+}
+
+.vault-scope-content {
+	transform-origin: 0 0;
+	width: max-content;
+	min-width: 100%;
+}
+
+.vault-scope-zoom-indicator {
+	position: absolute;
+	right: 12px;
+	bottom: 12px;
+	padding: 2px 8px;
+	border-radius: 4px;
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+	z-index: 3;
+}
+
+/* ---------- states ---------- */
+
+.vault-scope-empty,
+.vault-scope-error,
+.vault-scope-truncated {
+	padding: 24px;
+	color: var(--text-muted);
+	font-size: 14px;
+	text-align: center;
+}
+
+.vault-scope-error {
+	color: var(--text-error);
+}
+
+.vault-scope-truncated {
+	font-size: 12px;
+	text-align: left;
+	padding: 8px 0 0;
+}
+
+/* ---------- code ---------- */
+
+.vault-scope-code {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	font-family: var(--font-monospace);
+	font-size: 13px;
+	line-height: 1.6;
+}
+
+.vault-scope-code-row {
+	display: contents;
+}
+
+.vault-scope-code-ln {
+	padding-right: 14px;
+	color: var(--text-faint);
+	text-align: right;
+	user-select: none;
+	white-space: nowrap;
+}
+
+.vault-scope-code-text {
+	white-space: pre-wrap;
+	word-break: break-word;
+	background: transparent;
+	padding: 0;
+	color: var(--text-normal);
+}
+
+.vault-scope-editing .vault-scope-content,
+.vault-scope-editing .vault-scope-sizer {
+	width: 100%;
+	height: 100%;
+}
+
+.vault-scope-editor {
+	display: flex;
+	min-height: 60vh;
+	font-family: var(--font-monospace);
+	font-size: 13px;
+	line-height: 1.6;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.vault-scope-editor-gutter {
+	flex: 0 0 auto;
+	padding: 12px 6px 12px 12px;
+	text-align: right;
+	color: var(--text-faint);
+	background: var(--background-secondary);
+	border-right: 1px solid var(--background-modifier-border);
+	user-select: none;
+	overflow: hidden;
+}
+
+.vault-scope-editor-gutter span {
+	display: block;
+	white-space: nowrap;
+}
+
+.vault-scope-editor-area {
+	flex: 1;
+	padding: 12px 16px;
+	font: inherit;
+	tab-size: 4;
+	resize: none;
+	border: none;
+	outline: none;
+	background: transparent;
+	color: var(--text-normal);
+}
+
+/* ---------- shared page look for docx and xlsx ---------- */
+
+.vault-scope-page,
+.vault-scope-docx-active .vault-scope-docx-page {
+	background: #ffffff;
+	color: #1a1a1a;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+	margin: 0 auto 12px;
+	padding: 16px;
+	user-select: text;
+}
+
+.theme-dark .vault-scope-page,
+.theme-dark .vault-scope-docx-active .vault-scope-docx-page {
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.vault-scope-docx-active .vault-scope-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.vault-scope-docx-body {
+	background: transparent !important;
+	padding: 0 !important;
+}
+
+/* ---------- xlsx ---------- */
+
+.vault-scope-xlsx-tabs {
+	display: flex;
+	gap: 2px;
+	flex-wrap: wrap;
+	padding-bottom: 8px;
+	margin-bottom: 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.vault-scope-xlsx-tab {
+	padding: 4px 12px;
+	border-radius: 4px;
+	font-size: 13px;
+	color: var(--text-muted);
+	cursor: pointer;
+}
+
+.vault-scope-xlsx-tab:hover {
+	background: var(--background-modifier-hover);
+}
+
+.vault-scope-xlsx-tab.is-active {
+	background: var(--vault-scope-accent-soft);
+	color: var(--text-normal);
+}
+
+.vault-scope-xlsx-sheet {
+	display: none;
+}
+
+.vault-scope-xlsx-sheet.is-active {
+	display: block;
+}
+
+.vault-scope-page table {
+	border-collapse: collapse;
+	font-size: 12px;
+	font-family: var(--font-interface);
+}
+
+.vault-scope-page td {
+	border: 1px solid #d3d3d3;
+	padding: 3px 7px;
+	white-space: nowrap;
+	vertical-align: middle;
+	color: inherit;
+}
+
+/* ---------- pptx ---------- */
+
+.vault-scope-pptx-active .vault-scope-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+}
+
+.vault-scope-slide-card {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.vault-scope-slide-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.vault-scope-slide-number {
+	font-size: 12px;
+	color: var(--text-faint);
+	font-variant-numeric: tabular-nums;
+}
+
+.vault-scope-slide {
+	position: relative;
+	background: #ffffff;
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.14);
+	overflow: hidden;
+	/* The whole point of the HTML renderer: this text is real, so let people take it. */
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.theme-dark .vault-scope-slide {
+	box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.vault-scope-slide-notes {
+	max-width: 100%;
+	padding: 10px 14px;
+	border-left: 3px solid var(--vault-scope-accent);
+	background: var(--background-secondary);
+	border-radius: 0 4px 4px 0;
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.vault-scope-slide-notes.is-hidden {
+	display: none;
+}
+
+.vault-scope-slide-notes-label {
+	font-size: 11px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-faint);
+	margin-bottom: 4px;
+}
+
+.vault-scope-slide-notes p {
+	margin: 0 0 6px;
+}
+
+/* ---------- highlights ---------- */
+
+.vault-scope-highlight {
+	background: var(--vault-scope-accent-soft);
+	border-bottom: 2px solid var(--vault-scope-accent);
+	cursor: pointer;
+	border-radius: 2px;
+}
+
+td.vault-scope-highlight {
+	outline: 2px solid var(--vault-scope-accent);
+	outline-offset: -2px;
+}
+
+.vault-scope-highlight.is-flashing {
+	background: var(--vault-scope-accent-flash);
+	transition: background 0.2s ease;
+}
+
+/* ---------- comment rail ---------- */
+
+.vault-scope-rail {
+	position: absolute;
+	top: 0;
+	width: var(--vault-scope-rail-width, 260px);
+	pointer-events: none;
+	z-index: 2;
+}
+
+.vault-scope-card {
+	position: absolute;
+	width: 100%;
+	pointer-events: auto;
+	padding: 10px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-left: 3px solid var(--vault-scope-accent);
+	border-radius: 6px;
+	background: var(--background-primary);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+	font-size: 13px;
+	transition: top 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vault-scope-card.is-focused {
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+	border-left-width: 5px;
+}
+
+.vault-scope-card.is-resolved {
+	opacity: 0.55;
+	border-left-color: var(--text-faint);
+}
+
+.vault-scope-card.is-orphaned {
+	border-left-color: var(--text-error);
+}
+
+.vault-scope-card-meta {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+	margin-bottom: 6px;
+	font-size: 11px;
+	color: var(--text-faint);
+	font-variant-numeric: tabular-nums;
+}
+
+.vault-scope-badge {
+	padding: 1px 6px;
+	border-radius: 999px;
+	background: var(--background-modifier-error);
+	color: var(--text-error);
+	font-size: 10px;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.vault-scope-badge.is-resolved {
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.vault-scope-card-body {
+	white-space: pre-wrap;
+	word-break: break-word;
+	color: var(--text-normal);
+}
+
+.vault-scope-card-input {
+	width: 100%;
+	min-height: 64px;
+	resize: vertical;
+	font: inherit;
+	font-family: var(--font-interface);
+	background: var(--background-primary-alt);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 6px 8px;
+	color: var(--text-normal);
+}
+
+.vault-scope-card-actions {
+	display: flex;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+.vault-scope-card-actions button {
+	padding: 3px 10px;
+	font-size: 12px;
+	height: auto;
+	box-shadow: none;
+}
+
+.vault-scope-connectors {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	overflow: visible;
+	z-index: 1;
+}
+
+.vault-scope-connector {
+	fill: none;
+	stroke: var(--vault-scope-accent);
+	stroke-width: 1;
+	opacity: 0.35;
+}
+
+.vault-scope-connector.is-focused {
+	opacity: 0.85;
+	stroke-width: 1.5;
+}
+
+/* ---------- settings ---------- */
+
+.vault-scope-ext-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 4px 0 18px;
+}
+
+.vault-scope-ext-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 9px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 999px;
+	font-size: 12px;
+	font-family: var(--font-monospace);
+	color: var(--text-muted);
+	cursor: pointer;
+}
+
+.vault-scope-ext-chip input {
+	margin: 0;
+}
