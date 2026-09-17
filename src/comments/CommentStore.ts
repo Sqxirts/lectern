@@ -73,7 +73,7 @@ export class CommentStore {
 
 	private async flush(): Promise<void> {
 		const markdown = serialiseSidecar(this.parsed, {
-			title: `${this.source.name} — comments`,
+			title: `Comments on ${this.source.name}`,
 			area: this.area(),
 			source: this.source.path,
 		});

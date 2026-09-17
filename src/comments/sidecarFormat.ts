@@ -60,7 +60,7 @@ export function serialiseSidecar(parsed: ParsedSidecar, frontmatter: SidecarFron
 			created: comment.created,
 		};
 		return [
-			`## ${anchorLabel(comment.anchor)} — ${headingQuote(comment.anchor)}`,
+			`## ${anchorLabel(comment.anchor)}: ${headingQuote(comment.anchor)}`,
 			"",
 			BLOCK_OPEN,
 			JSON.stringify(meta),

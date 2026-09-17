@@ -3,7 +3,7 @@ import { parseSidecar, serialiseSidecar, type ParsedSidecar } from "../src/comme
 import type { ScopeComment } from "../src/comments/types";
 
 const FRONTMATTER = {
-	title: "fixture-deck.pptx — comments",
+	title: "Comments on fixture-deck.pptx",
 	area: "degree",
 	source: "Attachments/fixture-deck.pptx",
 };
@@ -54,7 +54,7 @@ describe("sidecar round trip", () => {
 
 		expect(markdown).toContain("%%scope");
 		// The heading and the body stay visible prose.
-		expect(markdown).toContain("## Slide 4 — ");
+		expect(markdown).toContain('## Slide 4: "');
 		expect(markdown).toContain("Ask Mensch whether this is on the midterm.");
 	});
 
