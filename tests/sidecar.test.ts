@@ -20,7 +20,7 @@ function comment(overrides: Partial<ScopeComment> = {}): ScopeComment {
 		},
 		status: "open",
 		created: "2026-09-17T14:02",
-		body: "Ask Mensch whether this is on the midterm.",
+		body: "Check whether this is on the midterm.",
 		...overrides,
 	};
 }
@@ -55,7 +55,7 @@ describe("sidecar round trip", () => {
 		expect(markdown).toContain("%%scope");
 		// The heading and the body stay visible prose.
 		expect(markdown).toContain('## Slide 4: "');
-		expect(markdown).toContain("Ask Mensch whether this is on the midterm.");
+		expect(markdown).toContain("Check whether this is on the midterm.");
 	});
 
 	it("keeps every anchor kind intact", () => {
@@ -93,7 +93,7 @@ describe("sidecar round trip", () => {
 	it("picks up a body the user edited by hand", () => {
 		const markdown = serialiseSidecar(sidecar([comment()]), FRONTMATTER);
 		const edited = markdown.replace(
-			"Ask Mensch whether this is on the midterm.",
+			"Check whether this is on the midterm.",
 			"Rewritten by hand in Obsidian."
 		);
 

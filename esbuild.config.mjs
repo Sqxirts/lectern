@@ -1,21 +1,40 @@
 import esbuild from "esbuild";
 import process from "node:process";
 import builtins from "builtin-modules";
-import { copyFileSync, mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { copyFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
+import { dirname, join, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-// Build straight into the live plugin folder so a build is instantly testable.
-//
-// The source sits outside the vault on purpose. LiveSync here runs with
-// liveSync on, an empty syncIgnoreRegEx and useIgnoreFiles off, so a
-// node_modules inside the vault would replicate ~20k files to every device.
-// Point VAULT_SCOPE_OUT somewhere else if the vault moves.
-const outDir =
-	process.env.VAULT_SCOPE_OUT ??
-	join("C:/", "Users", "clash", "Documents", "Vault", "Vault", ".obsidian", "plugins", "vault-scope");
+/**
+ * Where the built plugin lands. This is a local machine path, so it is never
+ * committed: set it in .env.local (see .env.example) or as an environment
+ * variable. Falling back to ./dist means a fresh clone still builds.
+ */
+function resolveOutDir() {
+	if (process.env.VAULT_SCOPE_OUT) return process.env.VAULT_SCOPE_OUT;
+
+	const envFile = join(here, ".env.local");
+	if (existsSync(envFile)) {
+		for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
+			const match = /^\s*VAULT_SCOPE_OUT\s*=\s*(.+?)\s*$/.exec(line);
+			if (match) {
+				const value = match[1].replace(/^["']|["']$/g, "");
+				if (value) return isAbsolute(value) ? value : join(here, value);
+			}
+		}
+	}
+
+	console.warn(
+		"[vault-scope] No VAULT_SCOPE_OUT set, building to ./dist.\n" +
+			"             Copy .env.example to .env.local and point it at\n" +
+			"             <your vault>/.obsidian/plugins/vault-scope to install on build."
+	);
+	return join(here, "dist");
+}
+
+const outDir = resolveOutDir();
 
 const prod = process.argv[2] === "production";
 
