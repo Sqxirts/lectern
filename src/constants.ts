@@ -11,6 +11,14 @@ export const PLUGIN_NAME = "Vault Scope";
  * An extension with no highlight.js grammar is still worth listing. It falls
  * back to plaintext and the reader still gets line numbers, zoom, search and
  * comments, which is the whole point for things like Suricata rules.
+ *
+ * On makefile, dockerfile, env and gitignore, verified in a real vault on
+ * 2026-09-20: these only ever match `x.makefile`, `x.env` and so on. Obsidian
+ * does not index a file with no extension, nor one whose name begins with a
+ * dot, so a real `Makefile`, `Dockerfile`, `.env` or `.gitignore` never
+ * appears in the vault at all. There is nothing for a plugin to attach a view
+ * to, and no hook other than registerExtensions would change that. They are
+ * kept because the suffixed names do occur and cost nothing.
  */
 export const CODE_EXTENSION_GROUPS: Record<string, readonly string[]> = {
 	"Shell and scripting": [
