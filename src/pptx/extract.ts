@@ -118,7 +118,7 @@ async function readRels(zip: JSZip, partPath: string): Promise<Map<string, strin
  * PowerPoint leaves the filenames alone, so trusting the numbers would show
  * the deck in the wrong order.
  */
-async function slidePathsInOrder(zip: JSZip): Promise<string[]> {
+export async function slidePathsInOrder(zip: JSZip): Promise<string[]> {
 	const presentation = zip.file("ppt/presentation.xml");
 	if (presentation) {
 		const doc = parseXml(await presentation.async("text"));

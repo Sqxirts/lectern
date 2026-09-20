@@ -561,3 +561,40 @@ td.vault-scope-highlight {
 	font-size: 12px;
 	line-height: 1.5;
 }
+
+/*
+ * The pptx renderer puts overflow:hidden on every text box, but lays those
+ * boxes out a few pixels tighter than its own line boxes need, so descenders
+ * get shaved and an extra wrapped line disappears entirely.
+ *
+ * It also uses overflow:hidden for something else entirely: a PowerPoint
+ * picture crop (<a:srcRect>) becomes a box of the cropped size wrapping an
+ * oversized <img> at a negative offset. Relaxing overflow on those uncrops
+ * every image in the deck, which on CYBR 226 week 3 slide 11 spilled a stock
+ * photo's watermark over the shape next to it and left the wall plate the
+ * wrong shape.
+ *
+ * So relax it only on elements that hold no image. :has() makes that a
+ * one-selector distinction. !important because the renderer sets these inline.
+ */
+.vault-scope-slide *:not(:has(img)) {
+	overflow: visible !important;
+}
+
+/*
+ * Obsidian and most themes set `img { max-width: 100% }` for note content.
+ * Inside a slide that is actively wrong: the renderer crops a picture by
+ * wrapping an oversized <img> in a box of the cropped size and offsetting it,
+ * so an image is *supposed* to be wider than its parent. Clamping it shrinks
+ * the image while leaving the offset alone, and the crop window then lands on
+ * empty space. On CYBR 226 week 3 slide 11 the third photo was clipped from
+ * 387px to 157px against a -114px offset, leaving 43px of visible image, which
+ * read as a missing picture.
+ *
+ * Only the two images wider than their wrapper were affected, which is why
+ * this looked like one arbitrary broken image rather than a systematic fault.
+ */
+.vault-scope-slide img {
+	max-width: none !important;
+	max-height: none !important;
+}

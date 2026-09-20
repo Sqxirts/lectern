@@ -76,6 +76,34 @@ export class ZoomController {
 		this.set(1);
 	}
 
+	/**
+	 * The zoom at which the content's natural width fills the visible area.
+	 *
+	 * The wrapper's right padding is reserved for the comment rail, so the
+	 * usable width is its client width minus its own horizontal padding.
+	 * Returns 1 before measure() has run, or if the content already fits.
+	 */
+	fitLevel(): number {
+		if (this.natural.width <= 0) return 1;
+
+		const style = getComputedStyle(this.wrapper);
+		const padding = parseFloat(style.paddingLeft || "0") + parseFloat(style.paddingRight || "0");
+		const usable = this.wrapper.clientWidth - padding;
+		if (usable <= 0) return 1;
+
+		return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, usable / this.natural.width));
+	}
+
+	/** Scale so the content's full width is visible without sideways scrolling. */
+	fitToWidth(): void {
+		this.set(this.fitLevel());
+	}
+
+	/** True when the content is wider than the space available for it. */
+	get overflowsWidth(): boolean {
+		return this.fitLevel() < 1;
+	}
+
 	private apply(): void {
 		this.content.style.transformOrigin = "0 0";
 		this.content.style.transform = `scale(${this.level})`;

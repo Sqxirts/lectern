@@ -85,7 +85,17 @@ export class ScopeView extends FileView implements RailDelegate {
 
 		this.zoom?.set(this.settings.defaultZoomPercent / 100);
 		// Let the browser finish laying the content out before measuring it.
-		window.setTimeout(() => this.zoom?.measure(), 0);
+		window.setTimeout(() => {
+			this.zoom?.measure();
+			// A slide is as wide as the deck says it is, which is routinely
+			// wider than the pane once the comment rail has taken its share.
+			// Shrink to fit rather than opening on a cropped slide, but never
+			// enlarge: the default zoom still wins when it already fits.
+			if (this.zoom?.overflowsWidth) {
+				this.zoom.fitToWidth();
+				this.refreshToolbar();
+			}
+		}, 0);
 
 		this.store = new CommentStore(this.app, file, this.settings.sidecarFolder);
 		await this.store.load();
@@ -274,6 +284,12 @@ export class ScopeView extends FileView implements RailDelegate {
 			Toolbar.label(`${Math.round((this.zoom?.value ?? 1) * 100)}%`),
 			{ id: "zoom-in", label: "Zoom in", text: "+", onClick: () => this.zoom?.in() },
 			{ id: "zoom-reset", label: "Reset zoom to 100%", text: "Reset", onClick: () => this.zoom?.reset() },
+			{
+				id: "zoom-fit",
+				label: "Fit the page width to the pane",
+				text: "Fit",
+				onClick: () => this.zoom?.fitToWidth(),
+			},
 		];
 
 		const openCount = this.store?.comments.filter((c) => c.status === "open").length ?? 0;
