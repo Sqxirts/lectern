@@ -6,6 +6,7 @@ import { deckToMarkdown, extractPptxText, slideToPlainText, type SlideText } fro
 import { repairMetafileImages } from "../pptx/metafiles";
 import { readSlideSize, DEFAULT_SLIDE_SIZE, type SlideSize } from "../pptx/slideSize";
 import { repairCollapsedShapes } from "../pptx/thinShapes";
+import { readTableMerges, applyTableMerges, type TableMerges } from "../pptx/tableMerges";
 
 export class PptxRenderer extends Renderer {
 	private slides: SlideText[] = [];
@@ -20,13 +21,15 @@ export class PptxRenderer extends Renderer {
 
 		const buffer = await this.ctx.app.vault.readBinary(this.ctx.file);
 
-		// Three passes over the same file: the renderer for the visual slide,
+		// Four passes over the same file: the renderer for the visual slide,
 		// our own zip walk for clean text and speaker notes it does not
-		// produce, and the declared slide size to frame it with.
-		const [slidesHtml, slideText, slideSize] = await Promise.all([
+		// produce, the declared slide size to frame it with, and the table
+		// merges it discards.
+		const [slidesHtml, slideText, slideSize, tableMerges] = await Promise.all([
 			pptxToHtml(buffer),
 			extractPptxText(buffer),
 			readSlideSize(buffer),
+			readTableMerges(buffer),
 		]);
 		this.slides = slideText;
 		this.slideSize = slideSize;
@@ -57,6 +60,10 @@ export class PptxRenderer extends Renderer {
 			stage.appendChild(parseUntrustedHtml(html));
 			stage.dataset.scopeKind = "pptx";
 			stage.dataset.scopeIndex = String(slideNumber);
+
+			// The renderer drops every rowspan and colspan, so a merged region
+			// renders as its top-left cell followed by blanks.
+			applyTableMerges(stage, tableMerges[index] ?? []);
 
 			const notes = this.slides[index]?.notes ?? [];
 			if (notes.length > 0) {

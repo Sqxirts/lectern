@@ -5,6 +5,7 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { pptxToHtml } from "@jvmr/pptx-to-html";
 import { detectMetafile, dataUrlBytes } from "../src/pptx/metafiles";
+import { readTableMerges, applyTableMerges } from "../src/pptx/tableMerges";
 
 const DECK = process.env.RENDER_DECK ?? "";
 const OUT = process.env.RENDER_OUT ?? "";
@@ -35,6 +36,7 @@ describe("render", () => {
 		const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 		const out: any = await pptxToHtml(ab as ArrayBuffer);
 		const slides: any[] = Array.isArray(out) ? out : out.slides;
+		const merges = await readTableMerges(ab as ArrayBuffer);
 
 		mkdirSync(OUT, { recursive: true });
 		const cache = new Map<string, string | null>();
@@ -56,6 +58,12 @@ describe("render", () => {
 				const png = cache.get(src);
 				return png ? `src="${png}"` : whole;
 			});
+
+			// Reunite merged table cells, as the renderer does.
+			const holder = document.createElement("div");
+			holder.innerHTML = html;
+			applyTableMerges(holder, merges[i] ?? []);
+			html = holder.innerHTML;
 
 			const page = `<!doctype html><meta charset="utf-8"><style>
 				html,body{margin:0;padding:0;background:#fff}
