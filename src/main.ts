@@ -1,5 +1,5 @@
 import { Notice, Plugin, TFile } from "obsidian";
-import { ALL_EXTENSIONS, NEVER_REGISTER, PLUGIN_NAME, VIEW_TYPE_SCOPE, classify } from "./constants";
+import { ALL_EXTENSIONS, NEVER_REGISTER, PLUGIN_NAME, VIEW_TYPE_SCOPE, classify, migrateExtensions } from "./constants";
 import { DEFAULT_SETTINGS, ScopeSettingTab, type ScopeSettings } from "./settings";
 import { ScopeView } from "./view/ScopeView";
 
@@ -104,7 +104,11 @@ export default class VaultScopePlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const saved = await this.loadData();
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, saved);
+
+		const { changed } = migrateExtensions(this.settings, saved != null);
+		if (changed) await this.saveSettings();
 	}
 
 	async saveSettings(): Promise<void> {

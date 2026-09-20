@@ -1,37 +1,8 @@
 import { Notice } from "obsidian";
 import hljs from "highlight.js";
+import { LANGUAGE_ALIASES } from "../constants";
 import { Renderer, type ToolbarItem } from "./Renderer";
 
-/** Extensions whose highlight.js language name differs from the extension. */
-const LANGUAGE_ALIASES: Record<string, string> = {
-	h: "c",
-	hpp: "cpp",
-	mm: "objectivec",
-	m: "objectivec",
-	pm: "perl",
-	pl: "perl",
-	ps1: "powershell",
-	cmd: "dos",
-	bat: "dos",
-	env: "bash",
-	conf: "ini",
-	cfg: "ini",
-	properties: "ini",
-	gitignore: "bash",
-	makefile: "makefile",
-	dockerfile: "dockerfile",
-	styl: "stylus",
-	ex: "elixir",
-	exs: "elixir",
-	erl: "erlang",
-	vue: "xml",
-	htm: "xml",
-	html: "xml",
-	tsx: "typescript",
-	jsx: "javascript",
-	txt: "plaintext",
-	rst: "plaintext",
-};
 
 /**
  * highlight.js returns one HTML blob for the whole file, and its spans happily
