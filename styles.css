@@ -598,3 +598,20 @@ td.vault-scope-highlight {
 	max-width: none !important;
 	max-height: none !important;
 }
+
+/*
+ * A table whose style the deck never defined.
+ *
+ * PowerPoint's built-in table styles live inside PowerPoint, not in the file,
+ * and `<a:tblStyleLst def="...">` names the style for the *next* table created
+ * rather than styling anything. A table with no <a:tableStyleId> therefore has
+ * no style, and PowerPoint draws it plain: no fills, no banding, a thin grid.
+ *
+ * The renderer instead paints the header row #4F81BD and bands the body, then
+ * leaves the header text black on top of it. Put it back to the grid the deck
+ * asked for. !important because those fills are inline.
+ */
+.vault-scope-slide table.vault-scope-table-unstyled td {
+	background-color: transparent !important;
+	border: 1px solid #9a9a9a;
+}

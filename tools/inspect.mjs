@@ -1,8 +1,9 @@
 /**
  * Measure each rendered slide in a real browser:
  *   - text clipped by an overflow:hidden box
- *   - text boxes that overlap each other
- *   - the visible text, for comparison against the deck's own text
+ *   - text that visually collides with other text
+ *   - images that failed to decode
+ *   - images resized by CSS outside the renderer, which breaks picture crops
  */
 import { chromium } from "playwright";
 import { readdirSync, writeFileSync } from "fs";
@@ -24,11 +25,10 @@ for (const file of files) {
 
   const data = await page.evaluate(() => {
     const clipped = [];
-    const boxes = [];
+    const runs = [];
 
     for (const el of document.querySelectorAll("*")) {
       const style = getComputedStyle(el);
-      const rect = el.getBoundingClientRect();
       const text = (el.textContent || "").trim();
 
       // Does this element's own content spill past its clipped box?
@@ -36,36 +36,41 @@ for (const file of files) {
       if (hidden && text) {
         const dw = el.scrollWidth - el.clientWidth;
         const dh = el.scrollHeight - el.clientHeight;
-        if (dw > 1 || dh > 1) {
-          clipped.push({ text: text.slice(0, 60), dw, dh });
-        }
+        if (dw > 1 || dh > 1) clipped.push({ text: text.slice(0, 60), dw, dh });
       }
 
-      // Candidate text boxes: positioned, has direct text, reasonable size.
+      // Collect the *painted* extent of the text, not the element box. A
+      // PowerPoint text box is routinely far taller than the words inside it,
+      // so comparing element boxes reports collisions that are not visible.
+      // Week 2 slide 3 has a paragraph whose box is 149px tall around 54px of
+      // text; its empty lower half sits over two cards below.
       const direct = [...el.childNodes].some((n) => n.nodeType === 3 && (n.nodeValue || "").trim());
-      if (direct && rect.width > 2 && rect.height > 2) {
-        boxes.push({
-          text: text.slice(0, 40),
-          x: rect.x, y: rect.y, w: rect.width, h: rect.height,
-          tag: el.tagName,
-        });
+      if (!direct) continue;
+
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      for (const rect of range.getClientRects()) {
+        if (rect.width > 1 && rect.height > 1) {
+          runs.push({ text: text.slice(0, 40), x: rect.x, y: rect.y, w: rect.width, h: rect.height, tag: el.tagName });
+        }
       }
     }
 
-    // Pairwise overlap between text boxes that are not nested in each other.
+    // Pairwise overlap between painted text runs from different elements.
     const overlaps = [];
-    for (let i = 0; i < boxes.length; i++) {
-      for (let j = i + 1; j < boxes.length; j++) {
-        const a = boxes[i], b = boxes[j];
+    for (let i = 0; i < runs.length; i++) {
+      for (let j = i + 1; j < runs.length; j++) {
+        const a = runs[i], b = runs[j];
+        if (a.text === b.text) continue;
         const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
         const oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
-        if (ox > 2 && oy > 2) {
-          const area = ox * oy;
-          const smaller = Math.min(a.w * a.h, b.w * b.h);
-          // Ignore table cells sharing a border and trivial grazes.
-          if (area / smaller > 0.25 && a.tag !== "TD" && b.tag !== "TD") {
-            overlaps.push({ a: a.text, b: b.text, area: Math.round(area), frac: +(area / smaller).toFixed(2) });
-          }
+        if (ox <= 1 || oy <= 1) continue;
+
+        const area = ox * oy;
+        const smaller = Math.min(a.w * a.h, b.w * b.h);
+        // Table cells legitimately share borders; ignore grazes.
+        if (area / smaller > 0.25 && a.tag !== "TD" && b.tag !== "TD") {
+          overlaps.push({ a: a.text, b: b.text, area: Math.round(area), frac: +(area / smaller).toFixed(2) });
         }
       }
     }
@@ -87,7 +92,6 @@ for (const file of files) {
     return { clipped, overlaps, resized, visible, imgs: document.querySelectorAll("img").length };
   });
 
-  // Which images actually decoded?
   const broken = await page.evaluate(() =>
     [...document.querySelectorAll("img")].filter((i) => !i.complete || i.naturalWidth === 0).length
   );
@@ -105,5 +109,5 @@ const rsz = report.filter((r) => r.resized && r.resized.length);
 console.log(`slides: ${report.length}`);
 console.log(`broken images on: ${brk.map((r) => `${r.slide}(${r.broken})`).join(", ") || "none"}`);
 console.log(`clipped text on: ${clip.map((r) => `${r.slide}(${r.clipped.length})`).join(", ") || "none"}`);
-console.log(`overlaps on: ${over.map((r) => `${r.slide}(${r.overlaps.length})`).join(", ") || "none"}`);
+console.log(`overlapping text on: ${over.map((r) => `${r.slide}(${r.overlaps.length})`).join(", ") || "none"}`);
 console.log(`images resized by outside css on: ${rsz.map((r) => `${r.slide}(${r.resized.length})`).join(", ") || "none"}`);

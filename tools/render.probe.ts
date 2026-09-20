@@ -6,6 +6,7 @@ import { tmpdir } from "os";
 import { pptxToHtml } from "@jvmr/pptx-to-html";
 import { detectMetafile, dataUrlBytes } from "../src/pptx/metafiles";
 import { readTableMerges, applyTableMerges } from "../src/pptx/tableMerges";
+import { readTableStyleSupport, markUnstyledTables } from "../src/pptx/tableStyles";
 
 const DECK = process.env.RENDER_DECK ?? "";
 const OUT = process.env.RENDER_OUT ?? "";
@@ -37,6 +38,7 @@ describe("render", () => {
 		const out: any = await pptxToHtml(ab as ArrayBuffer);
 		const slides: any[] = Array.isArray(out) ? out : out.slides;
 		const merges = await readTableMerges(ab as ArrayBuffer);
+		const styled = await readTableStyleSupport(ab as ArrayBuffer);
 
 		mkdirSync(OUT, { recursive: true });
 		const cache = new Map<string, string | null>();
@@ -63,12 +65,15 @@ describe("render", () => {
 			const holder = document.createElement("div");
 			holder.innerHTML = html;
 			applyTableMerges(holder, merges[i] ?? []);
+			markUnstyledTables(holder, styled[i] ?? []);
 			html = holder.innerHTML;
 
 			const page = `<!doctype html><meta charset="utf-8"><style>
 				html,body{margin:0;padding:0;background:#fff}
 				.vault-scope-slide{position:relative;background:#fff;color:#1a1a1a;
 					width:1280px;height:720px;overflow:hidden}
+				.vault-scope-slide table.vault-scope-table-unstyled td{
+					background-color:transparent !important;border:1px solid #9a9a9a}
 			</style><div class="vault-scope-slide">${html}</div>`;
 
 			writeFileSync(join(OUT, `slide-${String(i + 1).padStart(2, "0")}.html`), page, "utf-8");
