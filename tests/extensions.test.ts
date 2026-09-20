@@ -36,6 +36,22 @@ describe("extension catalogue", () => {
 		expect(stolen).toEqual([]);
 	});
 
+	/**
+	 * Obsidian opens these itself. Registering one would take over core file
+	 * handling, so images would stop previewing and audio would stop playing.
+	 * NEVER_REGISTER guards the view types; this guards the media formats.
+	 */
+	it("never claims a format Obsidian handles natively", () => {
+		const native = [
+			"md", "canvas", "base", "pdf",
+			"png", "jpg", "jpeg", "gif", "bmp", "svg", "webp", "avif",
+			"mp3", "wav", "m4a", "3gp", "flac", "ogg", "oga", "opus",
+			"mp4", "webm", "ogv", "mov", "mkv",
+		];
+		const collisions = ALL_EXTENSIONS.filter((ext) => native.includes(ext));
+		expect(collisions).toEqual([]);
+	});
+
 	it("classifies every code extension as code and office ones by kind", () => {
 		for (const ext of CODE_EXTENSIONS) expect(classify(ext)).toBe("code");
 		expect(classify("pptx")).toBe("pptx");

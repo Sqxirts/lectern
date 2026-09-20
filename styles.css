@@ -549,3 +549,15 @@ td.vault-scope-highlight {
 	white-space: nowrap;
 	overflow: hidden;
 }
+
+/* Shown above a file that did not decode as UTF-8, where saving would destroy it. */
+.vault-scope-binary-warning {
+	margin-bottom: 12px;
+	padding: 8px 12px;
+	border-left: 3px solid var(--text-error);
+	border-radius: 3px;
+	background: var(--background-modifier-error-hover, rgba(220, 70, 70, 0.08));
+	color: var(--text-muted);
+	font-size: 12px;
+	line-height: 1.5;
+}
