@@ -7,6 +7,7 @@ import { repairMetafileImages } from "../pptx/metafiles";
 import { readSlideSize, DEFAULT_SLIDE_SIZE, type SlideSize } from "../pptx/slideSize";
 import { repairCollapsedShapes } from "../pptx/thinShapes";
 import { readTableMerges, applyTableMerges, type TableMerges } from "../pptx/tableMerges";
+import { readTableStyleSupport, markUnstyledTables } from "../pptx/tableStyles";
 
 export class PptxRenderer extends Renderer {
 	private slides: SlideText[] = [];
@@ -21,15 +22,16 @@ export class PptxRenderer extends Renderer {
 
 		const buffer = await this.ctx.app.vault.readBinary(this.ctx.file);
 
-		// Four passes over the same file: the renderer for the visual slide,
+		// Several passes over the same file: the renderer for the visual slide,
 		// our own zip walk for clean text and speaker notes it does not
-		// produce, the declared slide size to frame it with, and the table
-		// merges it discards.
-		const [slidesHtml, slideText, slideSize, tableMerges] = await Promise.all([
+		// produce, the declared slide size to frame it with, the table merges
+		// it discards, and which tables have a style the deck actually defines.
+		const [slidesHtml, slideText, slideSize, tableMerges, tableStyles] = await Promise.all([
 			pptxToHtml(buffer),
 			extractPptxText(buffer),
 			readSlideSize(buffer),
 			readTableMerges(buffer),
+			readTableStyleSupport(buffer),
 		]);
 		this.slides = slideText;
 		this.slideSize = slideSize;
@@ -64,6 +66,10 @@ export class PptxRenderer extends Renderer {
 			// The renderer drops every rowspan and colspan, so a merged region
 			// renders as its top-left cell followed by blanks.
 			applyTableMerges(stage, tableMerges[index] ?? []);
+
+			// The renderer invents a blue header and banded rows for a table
+			// whose style the deck never defined. PowerPoint draws those plain.
+			markUnstyledTables(stage, tableStyles[index] ?? []);
 
 			const notes = this.slides[index]?.notes ?? [];
 			if (notes.length > 0) {
