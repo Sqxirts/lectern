@@ -5,6 +5,7 @@ import { parseUntrustedHtml } from "../util/safeHtml";
 import { deckToMarkdown, extractPptxText, slideToPlainText, type SlideText } from "../pptx/extract";
 import { repairMetafileImages } from "../pptx/metafiles";
 import { readSlideSize, DEFAULT_SLIDE_SIZE, type SlideSize } from "../pptx/slideSize";
+import { repairCollapsedShapes } from "../pptx/thinShapes";
 
 export class PptxRenderer extends Renderer {
 	private slides: SlideText[] = [];
@@ -74,6 +75,11 @@ export class PptxRenderer extends Renderer {
 		// browser cannot decode. Fixing them needs to shell out, so it happens
 		// after the slides are on screen rather than blocking first paint.
 		void repairMetafileImages(this.ctx.container);
+
+		// Connectors drawn flat have a zero-height box and render as nothing.
+		// This needs layout to have happened, so it runs after the slides are
+		// in the DOM.
+		repairCollapsedShapes(this.ctx.container);
 
 		this.watchVisibleSlide();
 	}
