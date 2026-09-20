@@ -4,11 +4,13 @@ import { Renderer, type ToolbarItem } from "./Renderer";
 import { parseUntrustedHtml } from "../util/safeHtml";
 import { deckToMarkdown, extractPptxText, slideToPlainText, type SlideText } from "../pptx/extract";
 import { repairMetafileImages } from "../pptx/metafiles";
+import { readSlideSize, DEFAULT_SLIDE_SIZE, type SlideSize } from "../pptx/slideSize";
 
 export class PptxRenderer extends Renderer {
 	private slides: SlideText[] = [];
 	private slideEls: HTMLElement[] = [];
 	private currentSlide = 1;
+	private slideSize: SlideSize = DEFAULT_SLIDE_SIZE;
 	private notesVisible = false;
 	private observer: IntersectionObserver | null = null;
 
@@ -17,13 +19,16 @@ export class PptxRenderer extends Renderer {
 
 		const buffer = await this.ctx.app.vault.readBinary(this.ctx.file);
 
-		// Two passes over the same file: the renderer for the visual slide, our
-		// own zip walk for clean text and speaker notes it does not produce.
-		const [slidesHtml, slideText] = await Promise.all([
+		// Three passes over the same file: the renderer for the visual slide,
+		// our own zip walk for clean text and speaker notes it does not
+		// produce, and the declared slide size to frame it with.
+		const [slidesHtml, slideText, slideSize] = await Promise.all([
 			pptxToHtml(buffer),
 			extractPptxText(buffer),
+			readSlideSize(buffer),
 		]);
 		this.slides = slideText;
+		this.slideSize = slideSize;
 
 		this.ctx.container.empty();
 		this.slideEls = [];
@@ -41,6 +46,11 @@ export class PptxRenderer extends Renderer {
 			header.createSpan({ cls: "vault-scope-slide-number", text: `Slide ${slideNumber}` });
 
 			const stage = card.createDiv({ cls: "vault-scope-slide" });
+			// Size the frame from the deck's own <p:sldSz>, not from whatever
+			// the renderer happened to emit. They agree for a 16:9 deck and
+			// diverge for 4:3 or a custom page size.
+			stage.style.width = `${this.slideSize.width}px`;
+			stage.style.height = `${this.slideSize.height}px`;
 			// The renderer's output is derived from a file we did not author, so
 			// it is untrusted markup until safeHtml has been through it.
 			stage.appendChild(parseUntrustedHtml(html));
