@@ -3,6 +3,7 @@ import { pptxToHtml } from "@jvmr/pptx-to-html";
 import { Renderer, type ToolbarItem } from "./Renderer";
 import { parseUntrustedHtml } from "../util/safeHtml";
 import { deckToMarkdown, extractPptxText, slideToPlainText, type SlideText } from "../pptx/extract";
+import { repairMetafileImages } from "../pptx/metafiles";
 
 export class PptxRenderer extends Renderer {
 	private slides: SlideText[] = [];
@@ -58,6 +59,11 @@ export class PptxRenderer extends Renderer {
 
 			this.slideEls.push(card);
 		});
+
+		// The renderer hands back EMF and WMF bytes labelled as PNG, which the
+		// browser cannot decode. Fixing them needs to shell out, so it happens
+		// after the slides are on screen rather than blocking first paint.
+		void repairMetafileImages(this.ctx.container);
 
 		this.watchVisibleSlide();
 	}
