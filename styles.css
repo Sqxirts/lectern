@@ -561,3 +561,18 @@ td.vault-scope-highlight {
 	font-size: 12px;
 	line-height: 1.5;
 }
+
+/*
+ * The pptx renderer puts overflow:hidden on every text box, but lays those
+ * boxes out a few pixels tighter than its own line boxes need, so descenders
+ * get shaved and an extra wrapped line disappears entirely. On CYBR 226 week 3
+ * slide 5 the title rendered as "Variable".
+ *
+ * Measured across 172 slides in three decks: relaxing this removes essentially
+ * all clipping (83 clipped elements down to 2) and introduces no new overlap
+ * anywhere. The slide frame itself keeps its own overflow:hidden, so nothing
+ * escapes the page. !important because the renderer sets these inline.
+ */
+.vault-scope-slide * {
+	overflow: visible !important;
+}
