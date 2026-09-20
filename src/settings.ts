@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import type VaultScopePlugin from "./main";
-import { CODE_EXTENSIONS, OFFICE_EXTENSIONS } from "./constants";
+import { CODE_EXTENSIONS, CODE_EXTENSION_GROUPS, OFFICE_EXTENSIONS } from "./constants";
 
 export interface ScopeSettings {
 	/** Vault-relative folder that holds the `<file>.comments.md` sidecars. */
@@ -11,6 +11,13 @@ export interface ScopeSettings {
 	showResolvedByDefault: boolean;
 	/** Extensions Vault Scope claims. Trimmed so it can coexist with other previewers. */
 	registeredExtensions: string[];
+	/**
+	 * Every extension this vault has been offered, whether or not it is on.
+	 * The difference between this and the current catalogue is what a plugin
+	 * update added, which is how new extensions get enabled without resurrecting
+	 * the ones the user switched off.
+	 */
+	knownExtensions: string[];
 	/** Render pptx speaker notes under each slide on open. */
 	showSpeakerNotes: boolean;
 }
@@ -20,8 +27,10 @@ export const DEFAULT_SETTINGS: ScopeSettings = {
 	defaultZoomPercent: 100,
 	showResolvedByDefault: false,
 	registeredExtensions: [...CODE_EXTENSIONS, ...OFFICE_EXTENSIONS],
+	knownExtensions: [...CODE_EXTENSIONS, ...OFFICE_EXTENSIONS],
 	showSpeakerNotes: true,
 };
+
 
 export class ScopeSettingTab extends PluginSettingTab {
 	private plugin: VaultScopePlugin;
@@ -94,7 +103,9 @@ export class ScopeSettingTab extends PluginSettingTab {
 		});
 
 		this.addExtensionGroup(containerEl, "Office documents", [...OFFICE_EXTENSIONS]);
-		this.addExtensionGroup(containerEl, "Code and text", [...CODE_EXTENSIONS]);
+		for (const [label, extensions] of Object.entries(CODE_EXTENSION_GROUPS)) {
+			this.addExtensionGroup(containerEl, label, [...extensions]);
+		}
 	}
 
 	private addExtensionGroup(parent: HTMLElement, label: string, extensions: string[]): void {

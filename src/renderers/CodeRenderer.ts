@@ -1,37 +1,9 @@
 import { Notice } from "obsidian";
 import hljs from "highlight.js";
+import { LANGUAGE_ALIASES } from "../constants";
+import { looksUndecodable } from "../util/text";
 import { Renderer, type ToolbarItem } from "./Renderer";
 
-/** Extensions whose highlight.js language name differs from the extension. */
-const LANGUAGE_ALIASES: Record<string, string> = {
-	h: "c",
-	hpp: "cpp",
-	mm: "objectivec",
-	m: "objectivec",
-	pm: "perl",
-	pl: "perl",
-	ps1: "powershell",
-	cmd: "dos",
-	bat: "dos",
-	env: "bash",
-	conf: "ini",
-	cfg: "ini",
-	properties: "ini",
-	gitignore: "bash",
-	makefile: "makefile",
-	dockerfile: "dockerfile",
-	styl: "stylus",
-	ex: "elixir",
-	exs: "elixir",
-	erl: "erlang",
-	vue: "xml",
-	htm: "xml",
-	html: "xml",
-	tsx: "typescript",
-	jsx: "javascript",
-	txt: "plaintext",
-	rst: "plaintext",
-};
 
 /**
  * highlight.js returns one HTML blob for the whole file, and its spans happily
@@ -88,8 +60,10 @@ function splitHighlightedIntoLines(source: HTMLElement): DocumentFragment[] {
 	return lines;
 }
 
+
 export class CodeRenderer extends Renderer {
 	private content = "";
+	private readOnly = false;
 	private editing = false;
 	private textarea: HTMLTextAreaElement | null = null;
 	private gutter: HTMLElement | null = null;
@@ -97,6 +71,7 @@ export class CodeRenderer extends Renderer {
 
 	async render(): Promise<void> {
 		this.content = await this.ctx.app.vault.read(this.ctx.file);
+		this.readOnly = looksUndecodable(this.content);
 		this.draw();
 	}
 
@@ -114,6 +89,15 @@ export class CodeRenderer extends Renderer {
 	}
 
 	private drawReadOnly(): void {
+		if (this.readOnly) {
+			this.ctx.container.createDiv({
+				cls: "vault-scope-binary-warning",
+				text:
+					"This file is not valid UTF-8 text, so what you see below is a lossy decode. " +
+					"Editing is disabled: saving it would overwrite the original with the damaged text.",
+			});
+		}
+
 		const lang = this.language();
 		let highlightedHtml: string;
 		try {
@@ -224,6 +208,8 @@ export class CodeRenderer extends Renderer {
 				},
 			];
 		}
+		if (this.readOnly) return [];
+
 		return [
 			{
 				id: "edit",

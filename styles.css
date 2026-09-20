@@ -321,6 +321,13 @@
 .vault-scope-slide {
 	position: relative;
 	background: #ffffff;
+	/*
+	 * Pin the text colour to the background. A slide is always white, but a
+	 * table cell that PowerPoint styles through a built-in table style carries
+	 * no colour of its own in the file, so it inherits from the view. Under a
+	 * dark theme that inherited colour is near-white, which is invisible here.
+	 */
+	color: #1a1a1a;
 	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.14);
 	overflow: hidden;
 	/* The whole point of the HTML renderer: this text is real, so let people take it. */
@@ -518,4 +525,39 @@ td.vault-scope-highlight {
 
 .vault-scope-ext-chip input {
 	margin: 0;
+}
+
+/*
+ * Stand-in for a metafile we could not rasterise: non-Windows, or GDI+ refused
+ * the file. A labelled box beats a broken-image icon, which reads as a bug in
+ * the deck rather than a limit of the renderer.
+ */
+.vault-scope-metafile-missing {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	padding: 0 4px;
+	border: 1px dashed rgba(0, 0, 0, 0.28);
+	border-radius: 3px;
+	background: rgba(0, 0, 0, 0.03);
+	color: #5b6770;
+	font-size: 9px;
+	line-height: 1.1;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+/* Shown above a file that did not decode as UTF-8, where saving would destroy it. */
+.vault-scope-binary-warning {
+	margin-bottom: 12px;
+	padding: 8px 12px;
+	border-left: 3px solid var(--text-error);
+	border-radius: 3px;
+	background: var(--background-modifier-error-hover, rgba(220, 70, 70, 0.08));
+	color: var(--text-muted);
+	font-size: 12px;
+	line-height: 1.5;
 }

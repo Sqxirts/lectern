@@ -3,6 +3,7 @@ import { pptxToHtml } from "@jvmr/pptx-to-html";
 import { Renderer, type ToolbarItem } from "./Renderer";
 import { parseUntrustedHtml } from "../util/safeHtml";
 import { deckToMarkdown, extractPptxText, slideToPlainText, type SlideText } from "../pptx/extract";
+import { repairMetafileImages } from "../pptx/metafiles";
 
 export class PptxRenderer extends Renderer {
 	private slides: SlideText[] = [];
@@ -59,6 +60,11 @@ export class PptxRenderer extends Renderer {
 			this.slideEls.push(card);
 		});
 
+		// The renderer hands back EMF and WMF bytes labelled as PNG, which the
+		// browser cannot decode. Fixing them needs to shell out, so it happens
+		// after the slides are on screen rather than blocking first paint.
+		void repairMetafileImages(this.ctx.container);
+
 		this.watchVisibleSlide();
 	}
 
@@ -67,7 +73,12 @@ export class PptxRenderer extends Renderer {
 	 * on screen rather than always the first.
 	 */
 	private watchVisibleSlide(): void {
-		const scrollRoot = this.ctx.container.parentElement;
+		// The scroller is .vault-scope-wrapper, two levels up: container is
+		// .vault-scope-content inside .vault-scope-sizer. Rooting the observer
+		// at the sizer, as this used to, reports every slide as fully visible
+		// because the sizer is as tall as all of them, so every ratio ties at 1,
+		// the first slide always wins and "Copy slide" only ever copied slide 1.
+		const scrollRoot = this.ctx.container.closest(".vault-scope-wrapper");
 		if (!scrollRoot) return;
 
 		const ratios = new Map<number, number>();
@@ -78,8 +89,12 @@ export class PptxRenderer extends Renderer {
 					const index = this.slideEls.indexOf(card);
 					if (index >= 0) ratios.set(index + 1, entry.intersectionRatio);
 				}
+				// Ratios are inserted in slide order, and the comparison is
+				// strictly greater, so an exact tie keeps the earlier slide.
+				// Slides that are off screen report 0 and must not win, or
+				// scrolling past the last slide would jump the selection back.
 				let best = this.currentSlide;
-				let bestRatio = -1;
+				let bestRatio = 0;
 				for (const [slide, ratio] of ratios) {
 					if (ratio > bestRatio) {
 						bestRatio = ratio;
