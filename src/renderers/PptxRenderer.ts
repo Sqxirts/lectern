@@ -178,7 +178,7 @@ export class PptxRenderer extends Renderer {
 				label: this.hasNotes()
 					? "Show or hide speaker notes"
 					: "This deck has no speaker notes",
-				text: "Notes",
+				text: "Speaker notes",
 				active: this.notesVisible,
 				disabled: !this.hasNotes(),
 				onClick: () => this.toggleNotes(),
