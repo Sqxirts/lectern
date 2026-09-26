@@ -610,8 +610,26 @@ td.vault-scope-highlight {
  * The renderer instead paints the header row #4F81BD and bands the body, then
  * leaves the header text black on top of it. Put it back to the grid the deck
  * asked for. !important because those fills are inline.
+ *
+ * A cell with its own <a:solidFill> in <a:tcPr> is spared: that colour came
+ * from the deck, not the renderer (week 5 slide 11's navy header row).
  */
-.vault-scope-slide table.vault-scope-table-unstyled td {
+.vault-scope-slide table.vault-scope-table-unstyled td:not(.vault-scope-cell-filled) {
 	background-color: transparent !important;
 	border: 1px solid #9a9a9a;
+}
+
+/*
+ * Slide backgrounds.
+ *
+ * The renderer paints a slide's <p:bg> as a child div at z-index:-1 inside a
+ * `.slide` wrapper whose own background is #fff. The wrapper is positioned but
+ * has no z-index, so it is not a stacking context, and a negative z-index child
+ * paints *behind* the wrapper's white. Every dark title and section slide came
+ * out white, with its white text invisible: 98% different from PowerPoint on
+ * CYBR 226 weeks 1 and 2. isolation makes the wrapper the stacking context, so
+ * the background layer lands on top of the white instead of under it.
+ */
+.vault-scope-slide > .slide {
+	isolation: isolate;
 }

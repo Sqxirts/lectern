@@ -2,7 +2,9 @@ param(
     [Parameter(Mandatory = $true)][string]$Deck,
     [Parameter(Mandatory = $true)][string]$OutDir,
     [int]$Width = 1280,
-    [int]$Height = 720
+    # 0 means: follow the deck's own aspect ratio. A fixed 720 squashes a 4:3
+    # deck, and every diff against the squashed export is then wrong.
+    [int]$Height = 0
 )
 
 # Export every slide to PNG through PowerPoint itself, as ground truth to
@@ -15,7 +17,10 @@ try {
     # msoTrue = -1. WithWindow=0 keeps it invisible.
     $pres = $ppt.Presentations.Open($Deck, -1, 0, 0)
     try {
-        Write-Output "slides: $($pres.Slides.Count)"
+        if ($Height -le 0) {
+            $Height = [int][Math]::Round($Width * $pres.PageSetup.SlideHeight / $pres.PageSetup.SlideWidth)
+        }
+        Write-Output "slides: $($pres.Slides.Count) at ${Width}x${Height}"
         foreach ($slide in $pres.Slides) {
             $n = "{0:D2}" -f $slide.SlideIndex
             $path = Join-Path $OutDir "slide-$n.png"

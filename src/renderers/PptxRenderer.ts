@@ -6,8 +6,7 @@ import { deckToMarkdown, extractPptxText, slideToPlainText, type SlideText } fro
 import { repairMetafileImages } from "../pptx/metafiles";
 import { readSlideSize, DEFAULT_SLIDE_SIZE, type SlideSize } from "../pptx/slideSize";
 import { repairCollapsedShapes } from "../pptx/thinShapes";
-import { readTableMerges, applyTableMerges, type TableMerges } from "../pptx/tableMerges";
-import { readTableStyleSupport, markUnstyledTables } from "../pptx/tableStyles";
+import { readSlideFixData, fixSlide } from "../pptx/postProcess";
 
 export class PptxRenderer extends Renderer {
 	private slides: SlideText[] = [];
@@ -24,14 +23,13 @@ export class PptxRenderer extends Renderer {
 
 		// Several passes over the same file: the renderer for the visual slide,
 		// our own zip walk for clean text and speaker notes it does not
-		// produce, the declared slide size to frame it with, the table merges
-		// it discards, and which tables have a style the deck actually defines.
-		const [slidesHtml, slideText, slideSize, tableMerges, tableStyles] = await Promise.all([
+		// produce, the declared slide size to frame it with, and the table data
+		// (merges, styles, cell fills) it gets wrong.
+		const [slidesHtml, slideText, slideSize, fixData] = await Promise.all([
 			pptxToHtml(buffer),
 			extractPptxText(buffer),
 			readSlideSize(buffer),
-			readTableMerges(buffer),
-			readTableStyleSupport(buffer),
+			readSlideFixData(buffer),
 		]);
 		this.slides = slideText;
 		this.slideSize = slideSize;
@@ -63,13 +61,7 @@ export class PptxRenderer extends Renderer {
 			stage.dataset.scopeKind = "pptx";
 			stage.dataset.scopeIndex = String(slideNumber);
 
-			// The renderer drops every rowspan and colspan, so a merged region
-			// renders as its top-left cell followed by blanks.
-			applyTableMerges(stage, tableMerges[index] ?? []);
-
-			// The renderer invents a blue header and banded rows for a table
-			// whose style the deck never defined. PowerPoint draws those plain.
-			markUnstyledTables(stage, tableStyles[index] ?? []);
+			fixSlide(stage, fixData, index);
 
 			const notes = this.slides[index]?.notes ?? [];
 			if (notes.length > 0) {
