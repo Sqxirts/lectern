@@ -110,6 +110,7 @@ export class CommentRail {
 		});
 
 		this.draftEl = card;
+		this.reserveSpace();
 		this.layout();
 		input.focus();
 	}
@@ -117,6 +118,16 @@ export class CommentRail {
 	closeDraft(): void {
 		this.draftEl?.remove();
 		this.draftEl = null;
+		this.reserveSpace();
+	}
+
+	/**
+	 * Hold the right-hand strip for the rail only while it shows something.
+	 * Reserving it always left every slide off to the left of an empty strip
+	 * on files with no comments, which is most of them.
+	 */
+	private reserveSpace(): void {
+		this.wrapper.toggleClass("has-rail", this.visible().length > 0 || this.draftEl !== null);
 	}
 
 	private visible(): PlacedComment[] {
@@ -132,6 +143,7 @@ export class CommentRail {
 		}
 
 		if (this.draftEl) this.railEl.appendChild(this.draftEl);
+		this.reserveSpace();
 		this.layout();
 	}
 
@@ -311,6 +323,7 @@ export class CommentRail {
 	}
 
 	destroy(): void {
+		this.wrapper.removeClass("has-rail");
 		this.railEl.remove();
 		this.connectorEl.remove();
 	}

@@ -86,6 +86,10 @@
 	min-height: 0;
 	overflow: auto;
 	padding: 16px;
+}
+
+/* Room for the comment rail, only while it has a comment or a draft to show. */
+.vault-scope-wrapper.has-rail {
 	padding-right: calc(var(--vault-scope-rail-width, 260px) + 32px);
 }
 

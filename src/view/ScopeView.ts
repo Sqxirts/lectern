@@ -102,6 +102,11 @@ export class ScopeView extends FileView implements RailDelegate {
 
 		this.rail = new CommentRail(this.wrapper, this.content, this, this.settings.showResolvedByDefault);
 		this.placeComments();
+		// The rail only takes its strip once it has comments to show, which is
+		// after the first fit check ran. Shrink again if it now covers the page.
+		window.setTimeout(() => {
+			if (this.zoom?.overflowsWidth) this.zoom.fitToWidth();
+		}, 0);
 		this.refreshToolbar();
 
 		this.watchLayout();

@@ -51,7 +51,8 @@ zoom.measure();
 const browser = await chromium.launch({ channel: "chrome" });
 // Wide, like a maximised Obsidian pane, where the off-centre zoom showed.
 const tab = await browser.newPage({ viewport: { width: 2000, height: 1200 } });
-await tab.setContent(page);
+const withRail = process.env.WITH_RAIL === "1";
+await tab.setContent(withRail ? page.replace('class="vault-scope-wrapper ', 'class="vault-scope-wrapper has-rail ') : page);
 const settle = () => tab.waitForTimeout(250);
 const state = () =>
 	tab.evaluate(() => {
@@ -69,6 +70,7 @@ const state = () =>
 			slideLeft: Math.round(slide.left),
 			// How far the slide's middle sits from the middle of the usable area.
 			offCentre: Math.round((slide.left + slide.right) / 2 - usableCenter),
+			usableW: Math.round(w.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)),
 			// Can the slide's left edge be scrolled back into view?
 			leftReachable: slide.left + w.scrollLeft >= wrap.left - 1,
 			onScreen,
@@ -107,7 +109,7 @@ for (const [k, r] of Object.entries(results)) {
 if (results.plus3.level !== 1.3 || Math.abs(results.plus3.slideW - 1664) > 2) fails.push("+ x3 should give a 1664px slide at 130%");
 if (!results.plus3.onScreen) fails.push("slide left the screen after +");
 if (results.reset.level !== 1 || Math.abs(results.reset.slideW - 1280) > 2) fails.push("Reset should return to a 1280px slide");
-if (results.fit.slideW > 2000 - 290 || results.fit.slideW < 1300) fails.push("Fit should make the slide fill the usable width");
+if (Math.abs(results.fit.slideW - results.fit.usableW) > 2) fails.push(`Fit should fill the usable ${results.fit.usableW}px, got ${results.fit.slideW}px`);
 if (!results.fit.onScreen) fails.push("slide off screen after Fit");
 console.log(fails.length ? `FAIL:\n- ${fails.join("\n- ")}` : "PASS");
 process.exit(fails.length ? 1 : 0);
