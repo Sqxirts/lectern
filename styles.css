@@ -103,6 +103,26 @@
 	min-width: 100%;
 }
 
+/*
+ * Slides and pages: centre the scaled block, not the unscaled one.
+ *
+ * With min-width: 100% the content was as wide as the pane and the slides
+ * sat centred inside it, so zoom scaled the empty margins too and pushed
+ * the slide right by zoom x half the spare width (off screen at 140% on a
+ * wide pane). Measured at its own width instead, the sizer holds exactly
+ * slide x zoom, and auto margins centre it while it fits; once it is wider
+ * than the pane the margins fall to zero and it scrolls from the left edge.
+ */
+.vault-scope-pptx-active .vault-scope-content,
+.vault-scope-docx-active .vault-scope-content {
+	min-width: 0;
+}
+
+.vault-scope-pptx-active .vault-scope-sizer,
+.vault-scope-docx-active .vault-scope-sizer {
+	margin: 0 auto;
+}
+
 .vault-scope-zoom-indicator {
 	position: absolute;
 	right: 12px;
