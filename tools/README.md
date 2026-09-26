@@ -20,6 +20,7 @@ unit suite says nothing about layout.
 | `inspect.mjs` | Measures rendered slides in Chrome: clipped text, overlapping text boxes, broken images, images resized by outside CSS, and text that blends into what is painted behind it. Given PowerPoint's export, labels text PowerPoint also draws illegibly as "authored". |
 | `diff.mjs` | Scores every slide against PowerPoint's export (share of pixels that differ) and ranks the deck worst-first. Optional heatmaps. |
 | `realdom.mjs` | Re-wraps one probe slide in the plugin's real DOM chain and stylesheet. Use it when a fault reproduces in Obsidian but not in a bare page. |
+| `zoom.check.mjs` | Drives the real `ZoomController` in Chrome with the real stylesheet: +, Reset and Fit must keep the slide the right size and on screen. Pass an old copy of the file to reproduce a regression. |
 | `compare.mjs` | Stacks PowerPoint's export above our render for a given slide, as one PNG. |
 
 ## Running them

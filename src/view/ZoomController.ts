@@ -44,12 +44,26 @@ export class ZoomController {
 
 	/** Record the unzoomed size. Call after the content is in the DOM. */
 	measure(): void {
+		// The content has `min-width: 100%` of the sizer, and the sizer is set
+		// to natural size x zoom. Measuring with the zoomed sizer in place read
+		// the zoomed width back as "natural", so every zoom step fed the next:
+		// the ResizeObserver re-measured, the sizer grew again, and the slides
+		// drifted off screen after one click of +. Reset and Fit then did their
+		// maths on the inflated width. Take the sizer's size out first, so the
+		// content measures against the pane alone. All synchronous: no paint
+		// happens in between.
 		const previous = this.content.style.transform;
+		const sizerWidth = this.sizer.style.width;
+		const sizerHeight = this.sizer.style.height;
 		this.content.style.transform = "none";
+		this.sizer.style.width = "";
+		this.sizer.style.height = "";
 		this.natural = {
 			width: this.content.scrollWidth,
 			height: this.content.scrollHeight,
 		};
+		this.sizer.style.width = sizerWidth;
+		this.sizer.style.height = sizerHeight;
 		this.content.style.transform = previous;
 		this.apply();
 	}
