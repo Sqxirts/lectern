@@ -1,4 +1,5 @@
 import { fontStack } from "./fonts";
+import { TAB_CLASS } from "./tabStops";
 import type { ParagraphModel, RunStyle, SlideTextModel, TextBodyModel } from "./textModel";
 
 /**
@@ -49,6 +50,11 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 	el.style.paddingLeft = `${p.marginLeftPx}px`;
 	if (p.marginRightPx) el.style.paddingRight = `${p.marginRightPx}px`;
 	el.style.tabSize = `${p.tabSizePx}px`;
+	// Tab stops for applyTabStops, which widens each tab box once there is
+	// layout to measure. Until then tabs keep the CSS default spacing.
+	el.dataset.tabDefault = String(p.tabSizePx);
+	if (p.tabStopsPx.length) el.dataset.tabStops = p.tabStopsPx.map((x) => +x.toFixed(2)).join(",");
+	if (p.indentPx < 0) el.dataset.tabHang = String(p.marginLeftPx);
 	el.style.textIndent = `${p.indentPx}px`;
 	el.style.lineHeight = lineHeightCss(p);
 	// PowerPoint does not add space before the first paragraph of a box.
@@ -74,7 +80,6 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 		// An empty paragraph still takes a line at the paragraph mark's size.
 		const spacer = document.createElement("span");
 		spacer.style.fontSize = `${p.endSizePt}pt`;
-		// Zero-width space: gives the line a height without visible text.
 		// Zero-width space: gives the line a height without visible text.
 		spacer.textContent = "\u200B";
 		el.appendChild(spacer);
@@ -116,7 +121,17 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 			if (text.startsWith("\t")) text = text.slice(1);
 			dropLeadingTab = false;
 		}
-		span.textContent = text;
+		// Each tab becomes its own box so the layout pass can size it to the
+		// next stop. A literal tab character only knows the default spacing.
+		text.split("\t").forEach((part, i) => {
+			if (i > 0) {
+				const tab = document.createElement("span");
+				tab.className = TAB_CLASS;
+				tab.textContent = "\t";
+				span.appendChild(tab);
+			}
+			if (part) span.appendChild(document.createTextNode(part));
+		});
 		applyRunStyle(span, run.style);
 		el.appendChild(span);
 	}
