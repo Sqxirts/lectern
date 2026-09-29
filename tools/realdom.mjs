@@ -1,13 +1,29 @@
-/** Rebuild the plugin's actual DOM chain and stylesheet around one slide. */
+/**
+ * Rebuild the plugin's actual DOM chain and stylesheet around one slide.
+ *
+ * Takes a page written by render.probe.ts and re-wraps its slide in the
+ * wrapper/sizer/content/card chain Obsidian uses, with Obsidian's CSS
+ * variables, so a fault that only shows inside the plugin can be reproduced
+ * in a plain browser. The layout passes come from the probe page's own
+ * bundled script (the plugin's real source), not a copy kept here: a copy is
+ * exactly what drifted before.
+ *
+ * Usage: node tools/realdom.mjs <probe slide.html> <styles.css> <out.html>
+ */
 import { readFileSync, writeFileSync } from "fs";
 
-const slideHtmlFile = process.argv[2];
-const stylesFile = process.argv[3];
-const out = process.argv[4];
+const [slideHtmlFile, stylesFile, out] = process.argv.slice(2);
 
 const raw = readFileSync(slideHtmlFile, "utf-8");
-const inner = raw.slice(raw.indexOf('<div class="vault-scope-slide">') + '<div class="vault-scope-slide">'.length, raw.lastIndexOf("</div>"));
+const open = raw.match(/<div class="vault-scope-slide"[^>]*>/);
+if (!open) throw new Error(`no .vault-scope-slide in ${slideHtmlFile}`);
+const start = open.index + open[0].length;
+const scriptAt = raw.indexOf("<script>", start);
+const end = raw.lastIndexOf("</div>", scriptAt >= 0 ? scriptAt : raw.length);
+const inner = raw.slice(start, end);
+const script = scriptAt >= 0 ? raw.slice(scriptAt) : "";
 const styles = readFileSync(stylesFile, "utf-8");
+const n = (slideHtmlFile.match(/(\d+)\.html$/) ?? [])[1] ?? "?";
 
 const page = `<!doctype html><meta charset="utf-8">
 <style>
@@ -21,31 +37,14 @@ ${styles}
     <div class="vault-scope-sizer">
       <div class="vault-scope-content">
         <div class="vault-scope-slide-card">
-          <div class="vault-scope-slide-header"><span class="vault-scope-slide-number">Slide 11</span></div>
-          <div class="vault-scope-slide" style="width:1280px;height:720px">${inner}</div>
+          <div class="vault-scope-slide-header"><span class="vault-scope-slide-number">Slide ${Number(n)}</span></div>
+          ${open[0]}${inner}</div>
         </div>
       </div>
     </div>
   </div>
 </div>
-<script>
-(function(){
-  const COLLAPSED_PX = 1;
-  for (const svg of Array.from(document.querySelectorAll('svg'))) {
-    const box = svg.getBoundingClientRect();
-    const stroked = svg.querySelector('[stroke-width]');
-    const raw = stroked ? stroked.getAttribute('stroke-width') : null;
-    const n = raw ? parseFloat(raw) : NaN;
-    const thickness = (isFinite(n) && n > 0) ? n : 1;
-    const flatH = box.height < COLLAPSED_PX && box.width >= COLLAPSED_PX;
-    const flatV = box.width < COLLAPSED_PX && box.height >= COLLAPSED_PX;
-    if (!flatH && !flatV) continue;
-    svg.setAttribute('preserveAspectRatio','none');
-    if (flatH) { svg.style.height = thickness+'px'; svg.style.top = ((parseFloat(svg.style.top)||0)-thickness/2)+'px'; }
-    else { svg.style.width = thickness+'px'; svg.style.left = ((parseFloat(svg.style.left)||0)-thickness/2)+'px'; }
-  }
-})();
-</script>`;
+${script}`;
 
 writeFileSync(out, page, "utf-8");
 console.log("written", out);

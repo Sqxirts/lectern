@@ -44,12 +44,26 @@ export class ZoomController {
 
 	/** Record the unzoomed size. Call after the content is in the DOM. */
 	measure(): void {
+		// The content has `min-width: 100%` of the sizer, and the sizer is set
+		// to natural size x zoom. Measuring with the zoomed sizer in place read
+		// the zoomed width back as "natural", so every zoom step fed the next:
+		// the ResizeObserver re-measured, the sizer grew again, and the slides
+		// drifted off screen after one click of +. Reset and Fit then did their
+		// maths on the inflated width. Take the sizer's size out first, so the
+		// content measures against the pane alone. All synchronous: no paint
+		// happens in between.
 		const previous = this.content.style.transform;
+		const sizerWidth = this.sizer.style.width;
+		const sizerHeight = this.sizer.style.height;
 		this.content.style.transform = "none";
+		this.sizer.style.width = "";
+		this.sizer.style.height = "";
 		this.natural = {
 			width: this.content.scrollWidth,
 			height: this.content.scrollHeight,
 		};
+		this.sizer.style.width = sizerWidth;
+		this.sizer.style.height = sizerHeight;
 		this.content.style.transform = previous;
 		this.apply();
 	}
@@ -58,9 +72,36 @@ export class ZoomController {
 		return this.level;
 	}
 
-	set(level: number): void {
-		this.level = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, level));
+	/**
+	 * Zoom so the point under `anchor` (client coordinates) stays where it is.
+	 * Defaults to the middle of the pane, which is what a zoom button should
+	 * do; the wheel passes the cursor. Without this every zoom grew from the
+	 * top-left corner and the part you were reading slid away.
+	 */
+	set(level: number, anchor?: { x: number; y: number }): void {
+		const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, level));
+		// The pane's right padding is the comment rail's, so the middle of the
+		// usable area, not of the whole pane, is where the slide sits.
+		const view = this.wrapper.getBoundingClientRect();
+		const style = getComputedStyle(this.wrapper);
+		const left = view.left + parseFloat(style.paddingLeft || "0");
+		const right = view.right - parseFloat(style.paddingRight || "0");
+		const at = anchor ?? { x: (left + right) / 2, y: view.top + view.height / 2 };
+
+		// Where the anchor falls in unzoomed content coordinates.
+		const before = this.sizer.getBoundingClientRect();
+		const px = (at.x - before.left) / this.level;
+		const py = (at.y - before.top) / this.level;
+
+		this.level = next;
 		this.apply();
+
+		// Scroll so that same content point lands back under the anchor. Read
+		// the rect again: centring margins move the sizer as it resizes.
+		const after = this.sizer.getBoundingClientRect();
+		this.wrapper.scrollLeft += after.left + px * next - at.x;
+		this.wrapper.scrollTop += after.top + py * next - at.y;
+
 		this.onChange();
 	}
 
@@ -117,7 +158,7 @@ export class ZoomController {
 	private onWheel = (event: WheelEvent): void => {
 		if (!event.ctrlKey && !event.metaKey) return;
 		event.preventDefault();
-		this.set(this.level + (event.deltaY < 0 ? STEP : -STEP));
+		this.set(this.level + (event.deltaY < 0 ? STEP : -STEP), { x: event.clientX, y: event.clientY });
 	};
 
 	// Middle-drag pans. Left-drag has to stay free for selecting text, which is

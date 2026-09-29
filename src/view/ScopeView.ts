@@ -102,6 +102,11 @@ export class ScopeView extends FileView implements RailDelegate {
 
 		this.rail = new CommentRail(this.wrapper, this.content, this, this.settings.showResolvedByDefault);
 		this.placeComments();
+		// The rail only takes its strip once it has comments to show, which is
+		// after the first fit check ran. Shrink again if it now covers the page.
+		window.setTimeout(() => {
+			if (this.zoom?.overflowsWidth) this.zoom.fitToWidth();
+		}, 0);
 		this.refreshToolbar();
 
 		this.watchLayout();
@@ -148,6 +153,9 @@ export class ScopeView extends FileView implements RailDelegate {
 
 		this.zoom = new ZoomController(this.wrapper, this.sizer, this.content, this.indicator, () => {
 			this.rail?.layout();
+			// The toolbar shows the zoom percentage too; it stayed on its first
+			// value because nothing refreshed it.
+			this.refreshToolbar();
 		});
 	}
 
@@ -293,7 +301,6 @@ export class ScopeView extends FileView implements RailDelegate {
 		];
 
 		const openCount = this.store?.comments.filter((c) => c.status === "open").length ?? 0;
-		const resolvedCount = (this.store?.comments.length ?? 0) - openCount;
 
 		const commentGroup: ToolbarItem[] = [
 			{
@@ -301,16 +308,6 @@ export class ScopeView extends FileView implements RailDelegate {
 				label: "Comment on the selected text (Ctrl+Alt+M)",
 				text: "Comment",
 				onClick: () => this.startComment(),
-			},
-			{
-				id: "show-resolved",
-				label: resolvedCount > 0
-					? `Show or hide ${resolvedCount} resolved comment${resolvedCount === 1 ? "" : "s"}`
-					: "No resolved comments yet",
-				text: "Resolved",
-				active: this.rail?.resolvedVisible,
-				disabled: resolvedCount === 0,
-				onClick: () => this.rail?.setShowResolved(!this.rail.resolvedVisible),
 			},
 			{
 				id: "open-sidecar",

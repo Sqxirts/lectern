@@ -5,8 +5,26 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { pptxToHtml } from "@jvmr/pptx-to-html";
 import { detectMetafile, dataUrlBytes } from "../src/pptx/metafiles";
-import { readTableMerges, applyTableMerges } from "../src/pptx/tableMerges";
-import { readTableStyleSupport, markUnstyledTables } from "../src/pptx/tableStyles";
+import { readSlideFixData, fixSlide } from "../src/pptx/postProcess";
+import { readSlideSize } from "../src/pptx/slideSize";
+
+// The plugin's real stylesheet, not a hand-kept excerpt of it. An excerpt is
+// how a cell-fill regression got past this harness.
+const STYLES = readFileSync(join(__dirname, "..", "styles.css"), "utf-8");
+
+// Passes that need layout run in the page, from the plugin's real source
+// bundled here, not a copy pasted into the page. The copy in realdom.mjs, and
+// this probe skipping the pass entirely, is why flat divider lines looked
+// missing in harness output while the plugin drew them.
+// esbuild runs as a child process: under vitest's jsdom its TextEncoder
+// invariant check fails, because jsdom swaps in its own Uint8Array.
+const LAYOUT_PASSES = execFileSync("npx", ["esbuild", "--bundle", "--format=iife", "--loader=ts"], {
+	cwd: join(__dirname, ".."),
+	input: `import { repairCollapsedShapes } from "./src/pptx/thinShapes";
+		repairCollapsedShapes(document.querySelector(".vault-scope-slide"));`,
+	shell: true,
+	encoding: "utf-8",
+});
 
 const DECK = process.env.RENDER_DECK ?? "";
 const OUT = process.env.RENDER_OUT ?? "";
@@ -37,8 +55,8 @@ describe("render", () => {
 		const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 		const out: any = await pptxToHtml(ab as ArrayBuffer);
 		const slides: any[] = Array.isArray(out) ? out : out.slides;
-		const merges = await readTableMerges(ab as ArrayBuffer);
-		const styled = await readTableStyleSupport(ab as ArrayBuffer);
+		const fixData = await readSlideFixData(ab as ArrayBuffer);
+		const size = await readSlideSize(ab as ArrayBuffer);
 
 		mkdirSync(OUT, { recursive: true });
 		const cache = new Map<string, string | null>();
@@ -61,20 +79,17 @@ describe("render", () => {
 				return png ? `src="${png}"` : whole;
 			});
 
-			// Reunite merged table cells, as the renderer does.
+			// The same table fixes the plugin applies, through the same function.
 			const holder = document.createElement("div");
 			holder.innerHTML = html;
-			applyTableMerges(holder, merges[i] ?? []);
-			markUnstyledTables(holder, styled[i] ?? []);
+			fixSlide(holder, fixData, i);
 			html = holder.innerHTML;
 
 			const page = `<!doctype html><meta charset="utf-8"><style>
 				html,body{margin:0;padding:0;background:#fff}
-				.vault-scope-slide{position:relative;background:#fff;color:#1a1a1a;
-					width:1280px;height:720px;overflow:hidden}
-				.vault-scope-slide table.vault-scope-table-unstyled td{
-					background-color:transparent !important;border:1px solid #9a9a9a}
-			</style><div class="vault-scope-slide">${html}</div>`;
+${STYLES}
+				.vault-scope-slide{box-shadow:none}
+			</style><div class="vault-scope-slide" style="width:${size.width}px;height:${size.height}px">${html}</div><script>${LAYOUT_PASSES}</script>`;
 
 			writeFileSync(join(OUT, `slide-${String(i + 1).padStart(2, "0")}.html`), page, "utf-8");
 		});

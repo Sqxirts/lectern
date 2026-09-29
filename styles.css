@@ -86,6 +86,10 @@
 	min-height: 0;
 	overflow: auto;
 	padding: 16px;
+}
+
+/* Room for the comment rail, only while it has a comment or a draft to show. */
+.vault-scope-wrapper.has-rail {
 	padding-right: calc(var(--vault-scope-rail-width, 260px) + 32px);
 }
 
@@ -101,6 +105,26 @@
 	transform-origin: 0 0;
 	width: max-content;
 	min-width: 100%;
+}
+
+/*
+ * Slides and pages: centre the scaled block, not the unscaled one.
+ *
+ * With min-width: 100% the content was as wide as the pane and the slides
+ * sat centred inside it, so zoom scaled the empty margins too and pushed
+ * the slide right by zoom x half the spare width (off screen at 140% on a
+ * wide pane). Measured at its own width instead, the sizer holds exactly
+ * slide x zoom, and auto margins centre it while it fits; once it is wider
+ * than the pane the margins fall to zero and it scrolls from the left edge.
+ */
+.vault-scope-pptx-active .vault-scope-content,
+.vault-scope-docx-active .vault-scope-content {
+	min-width: 0;
+}
+
+.vault-scope-pptx-active .vault-scope-sizer,
+.vault-scope-docx-active .vault-scope-sizer {
+	margin: 0 auto;
 }
 
 .vault-scope-zoom-indicator {
@@ -610,8 +634,26 @@ td.vault-scope-highlight {
  * The renderer instead paints the header row #4F81BD and bands the body, then
  * leaves the header text black on top of it. Put it back to the grid the deck
  * asked for. !important because those fills are inline.
+ *
+ * A cell with its own <a:solidFill> in <a:tcPr> is spared: that colour came
+ * from the deck, not the renderer (week 5 slide 11's navy header row).
  */
-.vault-scope-slide table.vault-scope-table-unstyled td {
+.vault-scope-slide table.vault-scope-table-unstyled td:not(.vault-scope-cell-filled) {
 	background-color: transparent !important;
 	border: 1px solid #9a9a9a;
+}
+
+/*
+ * Slide backgrounds.
+ *
+ * The renderer paints a slide's <p:bg> as a child div at z-index:-1 inside a
+ * `.slide` wrapper whose own background is #fff. The wrapper is positioned but
+ * has no z-index, so it is not a stacking context, and a negative z-index child
+ * paints *behind* the wrapper's white. Every dark title and section slide came
+ * out white, with its white text invisible: 98% different from PowerPoint on
+ * CYBR 226 weeks 1 and 2. isolation makes the wrapper the stacking context, so
+ * the background layer lands on top of the white instead of under it.
+ */
+.vault-scope-slide > .slide {
+	isolation: isolate;
 }
