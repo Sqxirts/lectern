@@ -6,6 +6,7 @@ import { deckToMarkdown, extractPptxText, slideToPlainText, type SlideText } fro
 import { repairMetafileImages } from "../pptx/metafiles";
 import { readSlideSize, DEFAULT_SLIDE_SIZE, type SlideSize } from "../pptx/slideSize";
 import { repairCollapsedShapes } from "../pptx/thinShapes";
+import { applyTabStops } from "../pptx/tabStops";
 import { readSlideFixData, fixSlide } from "../pptx/postProcess";
 
 export class PptxRenderer extends Renderer {
@@ -85,6 +86,11 @@ export class PptxRenderer extends Renderer {
 		// This needs layout to have happened, so it runs after the slides are
 		// in the DOM.
 		repairCollapsedShapes(this.ctx.container);
+
+		// Tab stops need layout too. Run again once fonts have loaded, since a
+		// late font changes where every word, and so every tab, falls.
+		applyTabStops(this.ctx.container);
+		void document.fonts?.ready.then(() => applyTabStops(this.ctx.container));
 
 		this.watchVisibleSlide();
 	}

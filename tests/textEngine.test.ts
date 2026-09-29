@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readSlideText } from "../src/pptx/textModel";
 import { applyTextBoxes, applyCellText } from "../src/pptx/textApply";
+import { nextStop } from "../src/pptx/tabStops";
 import { buildDeck, slide, textBox } from "./helpers/deck";
 
 const run = (text: string, rPr = "") => `<a:r><a:rPr lang="en-US"${rPr}/><a:t>${text}</a:t></a:r>`;
@@ -133,5 +134,36 @@ describe("applyCellText", () => {
 		const span = host.querySelector("td span") as HTMLElement;
 		expect(span.style.fontWeight).toBe("bold");
 		expect(span.style.color).toBe("");
+	});
+});
+
+describe("tab stops", () => {
+	it("reads a paragraph's custom tab stops in px, ascending", async () => {
+		// CYBR 310 week 2 slide 24 places words with stops like these.
+		const p = `<a:p><a:pPr><a:tabLst><a:tab pos="1000125" algn="l"/><a:tab pos="285750" algn="l"/></a:tabLst></a:pPr>${run("The\tasterisk")}</a:p>`;
+		const [model] = await readSlideText(await buildDeck({ slides: [slide(textBox(2, p))] }));
+		expect(model.boxes[0].paragraphs[0].tabStopsPx).toEqual([30, 105]);
+	});
+
+	it("renders each tab as its own box for the layout pass", async () => {
+		const p = `<a:p><a:pPr><a:tabLst><a:tab pos="285750"/></a:tabLst></a:pPr>${run("a\tb\tc")}</a:p>`;
+		const [model] = await readSlideText(await buildDeck({ slides: [slide(textBox(2, p))] }));
+		const host = rendered("abc");
+		applyTextBoxes(host, model);
+		expect(host.querySelectorAll(".vault-scope-tab")).toHaveLength(2);
+		expect((host.querySelector(".vault-scope-p") as HTMLElement).dataset.tabStops).toBe("30");
+	});
+});
+
+describe("nextStop", () => {
+	it("goes to the next custom stop, then to default stops", () => {
+		expect(nextStop(10, [30, 105], null, 48)).toBe(30);
+		expect(nextStop(30, [30, 105], null, 48)).toBe(105);
+		// Past every custom stop: the next multiple of the default spacing.
+		expect(nextStop(110, [30, 105], null, 48)).toBe(144);
+	});
+
+	it("treats a hanging indent as a stop", () => {
+		expect(nextStop(12, [], 46, 96)).toBe(46);
 	});
 });

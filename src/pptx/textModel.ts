@@ -84,6 +84,11 @@ export interface ParagraphModel {
 	marginLeftPx: number;
 	marginRightPx: number;
 	tabSizePx: number;
+	/**
+	 * Custom tab stops from <a:tabLst>, in px from the text box's inner left
+	 * edge, ascending. PDF-converted decks place every word with these.
+	 */
+	tabStopsPx: number[];
 	indentPx: number;
 	/** Unitless multiple of font size, or absolute points. */
 	lineHeight: { multiple: number } | { pt: number };
@@ -570,6 +575,12 @@ function readBody(txBody: Element, inh: ShapeInheritance, autofit: { fontScale: 
 		// Default tab spacing; decks set it, commonly half an inch, in the
 		// style chain. The spec default is one inch.
 		const defTab = first(chain, (el) => num(el, "defTabSz")) ?? 914400;
+		// The nearest source with a tab list wins, as with every other property.
+		const tabLst = first(chain, (el) => child(el, "tabLst") ?? undefined);
+		const tabStops = Array.from(tabLst?.children ?? [])
+			.filter((t) => t.localName === "tab")
+			.map((t) => (num(t, "pos") ?? 0) / EMU_PER_PX)
+			.sort((a, b) => a - b);
 		const indent = first(chain, (el) => num(el, "indent")) ?? 0;
 		const algn = first(chain, (el) => el.getAttribute("algn") ?? undefined);
 
@@ -613,6 +624,7 @@ function readBody(txBody: Element, inh: ShapeInheritance, autofit: { fontScale: 
 			marginLeftPx: marL / EMU_PER_PX,
 			marginRightPx: marR / EMU_PER_PX,
 			tabSizePx: defTab / EMU_PER_PX,
+			tabStopsPx: tabStops,
 			indentPx: indent / EMU_PER_PX,
 			lineHeight,
 			spaceBeforePt: spaceBeforePt * autofit.fontScale,

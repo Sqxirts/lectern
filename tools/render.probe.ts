@@ -21,7 +21,10 @@ const STYLES = readFileSync(join(__dirname, "..", "styles.css"), "utf-8");
 const LAYOUT_PASSES = execFileSync("npx", ["esbuild", "--bundle", "--format=iife", "--loader=ts"], {
 	cwd: join(__dirname, ".."),
 	input: `import { repairCollapsedShapes } from "./src/pptx/thinShapes";
-		repairCollapsedShapes(document.querySelector(".vault-scope-slide"));`,
+		import { applyTabStops } from "./src/pptx/tabStops";
+		const slide = document.querySelector(".vault-scope-slide");
+		repairCollapsedShapes(slide);
+		applyTabStops(slide);`,
 	shell: true,
 	encoding: "utf-8",
 });
