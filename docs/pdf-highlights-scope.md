@@ -1,6 +1,6 @@
 # PDF highlights and comments: scope
 
-Status: scoped 2026-10-07, not started. Branch `feat/pdf-highlights-scope`.
+Status: scoped 2026-10-07, spike passed the same day (see "Spike results"). Branch `feat/pdf-highlights-scope`.
 
 ## Goal
 
@@ -16,9 +16,11 @@ The public API has exactly one PDF hook: `loadPdfJs()`. Everything below is priv
 |---|---|---|
 | View type `"pdf"` | `workspace.getLeavesOfType("pdf")` | Find open PDF views |
 | `view.viewer.child` | the per-file PDF controller | Entry point to everything else |
-| `child.pdfViewer` | wraps PDF.js 5.3.34's `PDFViewer` | page count, `pdfDocument`, `eventBus` |
+| `child.pdfViewer` | PDF.js's application object (`PDFViewerApplication`-shaped) | `pdfDocument`, `eventBus` |
+| `child.pdfViewer.pdfViewer` | the actual PDF.js 5.3.34 `PDFViewer` | `pagesCount`, `getPageView(i)`, `container` (`.pdf-viewer-container`), `currentScale`, `currentScaleValue` |
 | eventBus `textlayerrendered` | fires per page, carries `source.id` (page number) and `source.textLayer` | Draw highlights once a page's text exists |
 | `child.getPage(n)` | page view, `div.dataset.loaded` when rendered | Page container to draw into |
+| `child.onResize()` | Obsidian's own pane-resize handler | Refit pages after we add or remove the rail strip |
 | `textLayer.textDivs` / `textContentItems` | one div per PDF.js text item, each with `data-idx` | Map a DOM selection to item indices and back |
 | `child.getTextSelectionRangeStr(pageDiv)` | returns `"startIdx,startOff,endIdx,endOff"` | The same selection format Obsidian puts in `#page=N&selection=...` links |
 
@@ -63,6 +65,7 @@ New `src/pdf/PdfHighlightLayer.ts`. On each `textlayerrendered` for a page that 
 - Build a DOM `Range` from the resolved item indices over `textLayer.textDivs`.
 - `range.getClientRects()`, convert to page-relative boxes, merge boxes on the same line.
 - Append absolutely positioned divs to a `.vault-scope-pdf-highlights` layer inside the page div, under the text layer so selection still works. `mix-blend-mode: multiply` in light theme, `screen` in dark.
+- Position boxes in **percent of the layer box**, measured from the layer's own `getBoundingClientRect()` (not the page div's, which includes its border). Percent units keep boxes on the text during PDF.js's CSS-only zoom, before the text layer is re-rendered.
 
 PDF.js throws the text layer away and rebuilds it on zoom and when a page scrolls far off and back. The event fires again each time, so we simply redraw. Nothing is cached in pixel units.
 
@@ -70,14 +73,13 @@ Before the text layer exists, a comment still needs a vertical position for its 
 
 ### 4. Margin rail
 
-Reuse `CommentRail` unchanged if possible. It needs a scrolling wrapper and a content element:
+**Padding the scroller does not work** (spike, phase A). `clientWidth` includes padding, so PDF.js's page-width fit ignores it and the page runs under the rail.
 
-- wrapper: the viewer's `.pdf-viewer-container` (the scroller).
-- content: the `.pdfViewer` element inside it.
+**Narrow the scroller instead**, then call `child.onResize()`. Set `.pdf-viewer-container` to `width: calc(100% - var(--vault-scope-rail-width) - 32px)` while there are comments to show, and call `child.onResize()` after every toggle. PDF.js then refits into the narrower box, and Obsidian's own resize observer keeps it fitted on later pane resizes.
 
-That requires scoped CSS: `.pdf-viewer-container.has-rail` gets the same right padding as `.vault-scope-wrapper.has-rail`. PDF.js centres pages, so padding the scroller shifts them left, which is what we want.
+Consequence for `CommentRail`: the rail can no longer live *inside* the scroller (it would be clipped), so it sits in the freed strip as a sibling of the scroller. Today's rail scrolls with the content because it is inside the wrapper. Add a mode where the rail is outside, and on the scroller's `scroll` event it translates its card layer by `-scrollTop`. Connectors become one SVG over both the scroller and the strip, recomputed on scroll. Keep that change inside `CommentRail` behind a constructor option, so `ScopeView` is untouched.
 
-**This is the riskiest part.** PDF.js sizes pages from the container width on "page-fit" zoom. Adding padding may trigger a re-fit loop, or the viewer's own `ResizeObserver` may fight us. Spike this first (step 1 below). The fallback is the rail as a separate right-sidebar leaf listing the PDF's comments, without connectors. It is uglier but has no layout coupling.
+The sidebar-list fallback is no longer needed.
 
 ### 5. Glue
 
@@ -96,12 +98,25 @@ New `src/pdf/PdfCommentController.ts`, one per open PDF leaf. It owns the store,
 
 Each step ends with `npm run build`, `npm test`, and a manual check on a real course PDF.
 
-1. **Spike (half a day).** Attach to an open PDF leaf, log `textlayerrendered`, draw one hard-coded highlight box, add `has-rail` padding, then zoom and scroll. Answers the two open risks: re-fit loop, and highlights surviving re-render. Stop and reassess if the padding fights PDF.js.
+1. ~~Spike.~~ Done 2026-10-07, passed. See "Spike results".
 2. Extract shared comment logic out of `ScopeView`. No behaviour change.
 3. `PdfAnchor` + `pdfAnchoring.ts` + tests on synthetic `getTextContent` items: exact indices, shifted indices, moved page, whitespace drift, orphan.
 4. `PdfHighlightLayer` + controller, create and display comments.
-5. Rail wiring, connectors, click-highlight-to-focus.
+5. `CommentRail` outside-the-scroller mode, then rail wiring, connectors, click-highlight-to-focus.
 6. Version guard and notices, the PDF++ conflict check, settings toggle, README.
+
+## Spike results (2026-10-07)
+
+Run against the live Obsidian 1.14.4 on `squirtle-pad`, started with `--remote-debugging-port=9229` and driven over CDP by Playwright. Test file: `CYBR 310 - Syllabus (original PDF).pdf` (8 pages). The scripts are in `tools/pdf-spike/` (`cdp.mjs` runs any of the numbered snippets in the Obsidian window). The spike changed nothing in the plugin. It added DOM from outside and removed it afterwards.
+
+| Question | Result |
+|---|---|
+| Does `textlayerrendered` re-fire after zoom, scroll-away-and-back, and pane resize? | Yes, every time. Page 1 saw it 3 times. Pages 4 to 6 never rendered at all, which confirms resolution must run on `getTextContent()`, not the DOM. |
+| Do our boxes stay on the text? | Worst error **0.02 px**: at fit width, 30 ms into a zoom (CSS-only phase), after the zoom re-render, on the last page, and after scrolling back. |
+| Do `getTextContent()` indices match the text layer's? | Yes. Page 1 gives 469 items both ways, with 0 string mismatches. 34 items are empty end-of-line items (`hasEOL`); they still take an index, so never filter them out. |
+| Does Obsidian's selection string use the same indices? | Yes. Selecting item 3 chars 0..3 ("310") returned `3,0,3,3` from `getTextSelectionRangeStr(pageView.div)`. |
+| Does padding the scroller for the rail fight PDF.js? | No feedback loop (0 zoom changes while idle), but padding is **ignored** by the fit, so the page runs under the rail. |
+| Does narrowing the scroller work? | Yes, once `child.onResize()` is called. Scale went 2.70 to 2.34 and the page sits inside the box, again with 0 idle zoom changes. It stayed fitted through a real pane shrink to 1200px and back, and removing the strip restored 2.70. |
 
 ## Risks and limits
 
