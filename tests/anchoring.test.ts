@@ -45,6 +45,23 @@ describe("resolveAnchor", () => {
 		expect(placement.elements[0].dataset.commentId).toBe("c1");
 	});
 
+	it("highlights the copy inside the context match, not a cleaner copy further down (regression)", () => {
+		const root = document.createElement("div");
+		// The first copy re-wrapped with extra whitespace; a second, exact copy later on.
+		root.innerHTML = `
+			<div data-scope-kind="pptx" data-scope-index="4">
+				<p>Remember the CIA   triad
+				is not a checklist. Instead it is a way of asking three questions.</p>
+				<p>Footnote: ${NEEDLE}.</p>
+			</div>`;
+		document.body.appendChild(root);
+
+		const placement = resolveAnchor(root, anchor(), "c9");
+		expect(placement.orphaned).toBe(false);
+		const first = placement.elements[0];
+		expect(first.closest("p")?.textContent?.startsWith("Remember")).toBe(true);
+	});
+
 	it("falls back to the quote alone when the context has changed", () => {
 		const root = slideDom();
 		const placement = resolveAnchor(root, anchor({ prefix: "Totally different lead-in " }), "c2");

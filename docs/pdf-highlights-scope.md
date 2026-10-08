@@ -100,7 +100,9 @@ Each step ends with `npm run build`, `npm test`, and a manual check on a real co
 
 1. ~~Spike.~~ Done 2026-10-07, passed. See "Spike results".
 2. ~~Extract shared comment logic out of `ScopeView`.~~ Done 2026-10-07: `src/comments/CommentSession.ts`, Obsidian-free with the store, rail and notices injected, 13 unit tests. Verified end to end in the live app on the code and pptx fixtures by `tools/pdf-spike/10-comment-smoke.js`.
-3. `PdfAnchor` + `pdfAnchoring.ts` + tests on synthetic `getTextContent` items: exact indices, shifted indices, moved page, whitespace drift, orphan.
+3. ~~`PdfAnchor` + `pdfAnchoring.ts` + tests.~~ Done 2026-10-07. `src/pdf/pdfAnchoring.ts`: `PdfPageText` (items joined with a newline after each `hasEOL` item, offsets to and from item indices), `buildPdfAnchor`, and `resolvePdfAnchor`. Its fallback order is: stored indices if they still cover the quote, then context, then quote, then other pages nearest first, then orphaned. 18 tests. The context step also found two bugs in the shared matcher, now fixed for slides, docs and code too:
+   - `looseIndexOf(text, needle, from)` ignored `from` on its whitespace-tolerant fallback.
+   - The context step searched for the quote *from* the context match. The exact-match path runs first, so a cleanly typed copy of the quote further down beat the line-wrapped copy inside the match. It now searches *within* the match (`looseIndexWithin`). Both have regression tests that fail without the fix.
 4. `PdfHighlightLayer` + controller, create and display comments.
 5. `CommentRail` outside-the-scroller mode, then rail wiring, connectors, click-highlight-to-focus.
 6. Version guard and notices, the PDF++ conflict check, settings toggle, README.

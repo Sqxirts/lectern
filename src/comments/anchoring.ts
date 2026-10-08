@@ -98,7 +98,7 @@ function normalise(text: string): { text: string; map: number[] } {
 }
 
 /** Find `needle` in `haystack`, ignoring whitespace differences. */
-function looseIndexOf(haystack: string, needle: string, from = 0): { start: number; end: number } | null {
+export function looseIndexOf(haystack: string, needle: string, from = 0): { start: number; end: number } | null {
 	const exact = haystack.indexOf(needle, from);
 	if (exact >= 0) return { start: exact, end: exact + needle.length };
 
@@ -106,12 +106,27 @@ function looseIndexOf(haystack: string, needle: string, from = 0): { start: numb
 	const n = normalise(needle);
 	if (!n.text.trim()) return null;
 
-	const found = h.text.indexOf(n.text.trim());
+	// Honour `from` here too. Without this the fallback restarted at 0, so a
+	// context match on the second copy of a repeated phrase highlighted the first.
+	const fromNormalised = h.map.findIndex((original) => original >= from);
+	if (fromNormalised < 0) return null;
+	const found = h.text.indexOf(n.text.trim(), fromNormalised);
 	if (found < 0) return null;
 
 	const start = h.map[found];
 	const lastIndex = Math.min(found + n.text.trim().length - 1, h.map.length - 1);
 	return { start, end: h.map[lastIndex] + 1 };
+}
+
+/**
+ * Find `needle` inside haystack[start, end) only. Used to pull the quote out
+ * of a prefix+quote+suffix match. Searching *from* the match start is not
+ * enough: the exact-match path runs first, so a cleanly typed copy of the
+ * quote further down beats the whitespace-drifted copy inside the match.
+ */
+export function looseIndexWithin(haystack: string, needle: string, start: number, end: number): { start: number; end: number } | null {
+	const found = looseIndexOf(haystack.slice(start, end), needle);
+	return found ? { start: found.start + start, end: found.end + start } : null;
 }
 
 function findScopeElement(root: HTMLElement, node: Node): HTMLElement | null {
@@ -163,6 +178,8 @@ export function buildAnchor(root: HTMLElement, range: Range): Anchor | null {
 function scopeSelector(anchor: Anchor): string {
 	switch (anchor.kind) {
 		case "pptx": return `[data-scope-kind="pptx"][data-scope-index="${anchor.slide}"]`;
+		// PDFs are resolved by pdfAnchoring.ts on PDF.js text items, never here.
+		case "pdf": return `[data-scope-kind="pdf"][data-scope-index="${anchor.page}"]`;
 		case "docx": return `[data-scope-kind="docx"][data-scope-index="${anchor.page}"]`;
 		case "code": return `[data-scope-kind="code"][data-scope-index="${anchor.line}"]`;
 		case "xlsx": return `[data-scope-kind="xlsx"][data-scope-index="${CSS.escape(anchor.sheet)}"][data-cell="${anchor.cell}"]`;
@@ -230,7 +247,7 @@ export function resolveAnchor(root: HTMLElement, anchor: Anchor, commentId: stri
 		// 1. prefix + quote + suffix, the strongest signal we stored.
 		const withContext = looseIndexOf(map.text, `${anchor.prefix}${anchor.quote}${anchor.suffix}`);
 		if (withContext) {
-			const quoteAt = looseIndexOf(map.text, anchor.quote, withContext.start);
+			const quoteAt = looseIndexWithin(map.text, anchor.quote, withContext.start, withContext.end);
 			if (quoteAt) {
 				return { elements: wrapRange(map, quoteAt.start, quoteAt.end, commentId), orphaned: false };
 			}
