@@ -17,6 +17,24 @@ export interface RailDelegate {
 }
 
 /**
+ * Where the rail goes when it cannot live inside the scroller.
+ *
+ * Obsidian's PDF viewer fits pages to its scroller's width and ignores padding,
+ * so the rail cannot reserve a strip inside it the way `.has-rail` does. The
+ * PDF controller narrows the scroller instead and hands the rail a strip beside
+ * it. The rail follows the scroller by translating, and connectors are drawn on
+ * an overlay spanning both, in viewport terms, redrawn on every scroll.
+ */
+export interface RailBeside {
+	/** Fixed strip to the right of the scroller, top-aligned with it. */
+	strip: HTMLElement;
+	/** Positioned element covering scroller and strip, for connector lines. */
+	overlay: HTMLElement;
+	/** The rail wants (true) or no longer wants (false) its strip. */
+	onReserve(reserved: boolean): void;
+}
+
+/**
  * The right-hand margin, the way Word does it: one card per comment, sitting
  * level with the text it points at, joined by a thin connector.
  *
@@ -37,15 +55,30 @@ export class CommentRail {
 	private draftTop = 0;
 	private showResolved: boolean;
 	private focusedId: string | null = null;
+	private beside: RailBeside | null;
+	private reserved = false;
 
-	constructor(wrapper: HTMLElement, content: HTMLElement, delegate: RailDelegate, showResolved: boolean) {
+	constructor(
+		wrapper: HTMLElement,
+		content: HTMLElement,
+		delegate: RailDelegate,
+		showResolved: boolean,
+		beside: RailBeside | null = null,
+	) {
 		this.wrapper = wrapper;
 		this.content = content;
 		this.delegate = delegate;
 		this.showResolved = showResolved;
+		this.beside = beside;
 
-		this.railEl = wrapper.createDiv({ cls: "vault-scope-rail" });
-		this.connectorEl = wrapper.createSvg("svg", { cls: "vault-scope-connectors" }) as SVGSVGElement;
+		if (beside) {
+			this.railEl = beside.strip.createDiv({ cls: "vault-scope-rail is-beside" });
+			// createSvg adds `cls` as one classList token, so a space-separated string throws; pass an array.
+			this.connectorEl = beside.overlay.createSvg("svg", { cls: ["vault-scope-connectors", "is-beside"] }) as SVGSVGElement;
+		} else {
+			this.railEl = wrapper.createDiv({ cls: "vault-scope-rail" });
+			this.connectorEl = wrapper.createSvg("svg", { cls: "vault-scope-connectors" }) as SVGSVGElement;
+		}
 
 		// Clicking a highlight brings its card forward.
 		this.content.addEventListener("click", (event) => {
@@ -127,7 +160,15 @@ export class CommentRail {
 	 * on files with no comments, which is most of them.
 	 */
 	private reserveSpace(): void {
-		this.wrapper.toggleClass("has-rail", this.visible().length > 0 || this.draftEl !== null);
+		const wanted = this.visible().length > 0 || this.draftEl !== null;
+		if (!this.beside) {
+			this.wrapper.toggleClass("has-rail", wanted);
+			return;
+		}
+		if (wanted !== this.reserved) {
+			this.reserved = wanted;
+			this.beside.onReserve(wanted);
+		}
 	}
 
 	private visible(): PlacedComment[] {
@@ -225,7 +266,12 @@ export class CommentRail {
 		const placed = this.placed.find((p) => p.comment.id === id);
 		const first = placed?.elements[0];
 
-		if (first && !fromCard) {
+		if (this.beside) {
+			// The strip is overflow-hidden and positioned by transform, so
+			// scrolling a card into view would knock it out of line. Scroll the
+			// document to the highlight instead; the card follows it.
+			first?.scrollIntoView({ block: "center", behavior: "smooth" });
+		} else if (first && !fromCard) {
 			this.cards.get(id)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 		} else if (first) {
 			first.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -250,6 +296,10 @@ export class CommentRail {
 	 * left edge is re-pinned to the right of the viewport on every scroll.
 	 */
 	private pin(): void {
+		if (this.beside) {
+			this.railEl.style.transform = `translateY(${-this.wrapper.scrollTop}px)`;
+			return;
+		}
 		const left = this.wrapper.scrollLeft + this.wrapper.clientWidth - RAIL_WIDTH - RAIL_MARGIN;
 		this.railEl.style.left = `${Math.max(RAIL_MARGIN, left)}px`;
 	}
@@ -257,6 +307,8 @@ export class CommentRail {
 	/** Cheap path for scroll events: re-pin only, skip the full relayout. */
 	onScroll(): void {
 		this.pin();
+		// Beside the scroller the connectors live on a fixed overlay, so they move on scroll.
+		if (this.beside) this.drawConnectors();
 	}
 
 	layout(): void {
@@ -295,6 +347,10 @@ export class CommentRail {
 	}
 
 	private drawConnectors(): void {
+		if (this.beside) {
+			this.drawConnectorsBeside();
+			return;
+		}
 		const wrapperBox = this.wrapper.getBoundingClientRect();
 		const scrollTop = this.wrapper.scrollTop;
 
@@ -322,7 +378,41 @@ export class CommentRail {
 		}
 	}
 
+	/** Connectors in overlay coordinates, from each highlight's right edge to its card. */
+	private drawConnectorsBeside(): void {
+		const overlay = this.beside!.overlay.getBoundingClientRect();
+		const scroller = this.wrapper.getBoundingClientRect();
+
+		this.connectorEl.empty();
+		this.connectorEl.setAttribute("width", String(overlay.width));
+		this.connectorEl.setAttribute("height", String(overlay.height));
+
+		for (const placed of this.visible()) {
+			const card = this.cards.get(placed.comment.id);
+			const target = placed.elements[0];
+			if (!card || !target?.isConnected) continue;
+
+			const t = target.getBoundingClientRect();
+			const c = card.getBoundingClientRect();
+			// Skip lines whose highlight has scrolled out of the scroller.
+			if (t.bottom < scroller.top || t.top > scroller.bottom) continue;
+
+			const fromX = Math.min(t.right, scroller.right) - overlay.left;
+			const fromY = t.top - overlay.top + t.height / 2;
+			const toX = c.left - overlay.left;
+			const toY = c.top - overlay.top + 14;
+
+			const line = this.connectorEl.createSvg("path");
+			line.classList.add("vault-scope-connector");
+			const midX = fromX + (toX - fromX) / 2;
+			line.setAttribute("d", `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`);
+			if (placed.comment.id === this.focusedId) line.classList.add("is-focused");
+		}
+	}
+
 	destroy(): void {
+		if (this.beside && this.reserved) this.beside.onReserve(false);
+		this.reserved = false;
 		this.wrapper.removeClass("has-rail");
 		this.railEl.remove();
 		this.connectorEl.remove();

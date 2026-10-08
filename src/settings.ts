@@ -20,6 +20,8 @@ export interface ScopeSettings {
 	knownExtensions: string[];
 	/** Render pptx speaker notes under each slide on open. */
 	showSpeakerNotes: boolean;
+	/** Highlights and margin comments inside Obsidian's own PDF viewer. */
+	pdfComments: boolean;
 }
 
 export const DEFAULT_SETTINGS: ScopeSettings = {
@@ -29,6 +31,7 @@ export const DEFAULT_SETTINGS: ScopeSettings = {
 	registeredExtensions: [...CODE_EXTENSIONS, ...OFFICE_EXTENSIONS],
 	knownExtensions: [...CODE_EXTENSIONS, ...OFFICE_EXTENSIONS],
 	showSpeakerNotes: true,
+	pdfComments: true,
 };
 
 
@@ -43,6 +46,17 @@ export class ScopeSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
+
+		new Setting(containerEl)
+			.setName("Comments on PDFs")
+			.setDesc("Select text in Obsidian's PDF viewer and add a comment with the same hotkey. Stored in the same comment folder. The PDF itself is never changed.")
+			.addToggle((toggle) =>
+				toggle.setValue(this.plugin.settings.pdfComments).onChange(async (value) => {
+					this.plugin.settings.pdfComments = value;
+					await this.plugin.saveSettings();
+					this.plugin.pdfComments.sync();
+				})
+			);
 
 		new Setting(containerEl)
 			.setName("Comment folder")

@@ -103,9 +103,14 @@ Each step ends with `npm run build`, `npm test`, and a manual check on a real co
 3. ~~`PdfAnchor` + `pdfAnchoring.ts` + tests.~~ Done 2026-10-07. `src/pdf/pdfAnchoring.ts`: `PdfPageText` (items joined with a newline after each `hasEOL` item, offsets to and from item indices), `buildPdfAnchor`, and `resolvePdfAnchor`. Its fallback order is: stored indices if they still cover the quote, then context, then quote, then other pages nearest first, then orphaned. 18 tests. The context step also found two bugs in the shared matcher, now fixed for slides, docs and code too:
    - `looseIndexOf(text, needle, from)` ignored `from` on its whitespace-tolerant fallback.
    - The context step searched for the quote *from* the context match. The exact-match path runs first, so a cleanly typed copy of the quote further down beat the line-wrapped copy inside the match. It now searches *within* the match (`looseIndexWithin`). Both have regression tests that fail without the fix.
-4. `PdfHighlightLayer` + controller, create and display comments.
-5. `CommentRail` outside-the-scroller mode, then rail wiring, connectors, click-highlight-to-focus.
-6. Version guard and notices, the PDF++ conflict check, settings toggle, README.
+4. ~~Highlight layer + controller.~~ Done 2026-10-07, together with step 5. New in `src/pdf/`:
+   - `pdfInternals.ts`: one probe for every private field we touch.
+   - `pdfDom.ts`: selection to item span and back, 8 jsdom tests.
+   - `pdfHighlights.ts`: percent-unit boxes under the text layer, plus markers for unrendered pages placed at the text's estimated height from its PDF transform.
+   - `PdfCommentController.ts`: one per PDF tab, host for `CommentSession`.
+   - `PdfCommentManager.ts`: keeps one controller per PDF tab in sync on `layout-change` and `file-open`.
+5. ~~`CommentRail` outside-the-scroller mode.~~ Done: `RailBeside` (strip, overlay, `onReserve`). The rail translates with the scroller, connectors are drawn on an overlay in viewport terms, and the scroller is narrowed with `right: 292px` plus `child.onResize()`. Clicking a highlight focuses its card: the boxes sit under the text layer, so the click is hit-tested by position.
+6. Version guard, PDF++ check and settings toggle: done (`Comments on PDFs`, default on). **README still to do.**
 
 ## Spike results (2026-10-07)
 
@@ -119,6 +124,24 @@ Run against the live Obsidian 1.14.4 on `squirtle-pad`, started with `--remote-d
 | Does Obsidian's selection string use the same indices? | Yes. Selecting item 3 chars 0..3 ("310") returned `3,0,3,3` from `getTextSelectionRangeStr(pageView.div)`. |
 | Does padding the scroller for the rail fight PDF.js? | No feedback loop (0 zoom changes while idle), but padding is **ignored** by the fit, so the page runs under the rail. |
 | Does narrowing the scroller work? | Yes, once `child.onResize()` is called. Scale went 2.70 to 2.34 and the page sits inside the box, again with 0 idle zoom changes. It stayed fitted through a real pane shrink to 1200px and back, and removing the strip restored 2.70. |
+
+## Live test results, step 4 (2026-10-07)
+
+`tools/pdf-spike/30-e2e-a.js`, `35-e2e-b.js` and `hotkey.mjs` against the real plugin build, on the CYBR 310 syllabus. Everything passed:
+
+- **Draft and refit:** the draft opens in the strip, and the scroller narrows so pages refit (zoom 2.34 to 1.98) and still fit.
+- **Alignment:** a box sits within 0.02 px of its text, before and after a 1.6× zoom. The card is level with its highlight (0 to 4 px).
+- **Comment note:** `"kind":"pdf"`, `"selection":[5,0,5,12]`, heading `Page 1: "Introduction"`.
+- **Reopening:** both comments come back through the `selection` step. A page-7 comment, before page 7 renders, shows as a marker, with its card 2 px from it. After scrolling there it's a box, 0.02 px from the text.
+- **Interaction:** clicking a box focuses its card. Resolving dims the box and hides the card. Deleting the last open comment releases the strip and restores the scroller.
+- **Hotkey:** the real `Ctrl+Alt+M` works inside the PDF viewer. Cancelling a draft writes nothing.
+- **Cleanup:** closing the tab removes everything we added. The only elements left belonged to another open PDF tab's own controller.
+
+Three bugs only the live run could show, all fixed:
+
+1. **`createSvg` throws on a space-separated `cls`.** It adds the string as one class token, and SVG elements reject one containing a space. `createDiv` assigns `className`, which is why the same string worked there. Pass an array. A failed start also left the strip in the page, so `attach` now destroys the controller if `start` throws.
+2. **CSS variables were scoped to `.vault-scope-container`.** The PDF pieces live outside it, so the boxes, connectors and card accent rendered with no colour. The measurements all passed; only the screenshot showed it. The variables now go on the PDF elements too.
+3. **PDF.js evicts far-off pages by emptying their div, and fires no event.** That took a marker with it, which read as top 0 and pulled its card to the top of the rail. Fix: on scroll and resize, redraw any comment whose element `isConnected` is false.
 
 ## Risks and limits
 

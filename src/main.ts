@@ -2,12 +2,28 @@ import { Notice, Plugin, TFile } from "obsidian";
 import { ALL_EXTENSIONS, NEVER_REGISTER, PLUGIN_NAME, VIEW_TYPE_SCOPE, classify, migrateExtensions } from "./constants";
 import { DEFAULT_SETTINGS, ScopeSettingTab, type ScopeSettings } from "./settings";
 import { ScopeView } from "./view/ScopeView";
+import { PdfCommentManager } from "./pdf/PdfCommentManager";
+
+/** What the comment commands need, from either a Vault Scope view or a PDF tab. */
+interface CommentTarget {
+	startComment(): void;
+	openSidecar(): Promise<void>;
+	reloadComments(): Promise<void>;
+}
 
 export default class VaultScopePlugin extends Plugin {
 	settings: ScopeSettings = DEFAULT_SETTINGS;
+	pdfComments!: PdfCommentManager;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
+
+		this.pdfComments = new PdfCommentManager(this.app, this.settings);
+		const syncPdf = () => this.pdfComments.sync();
+		this.app.workspace.onLayoutReady(syncPdf);
+		this.registerEvent(this.app.workspace.on("layout-change", syncPdf));
+		this.registerEvent(this.app.workspace.on("file-open", syncPdf));
+		this.register(() => this.pdfComments.destroyAll());
 
 		this.registerView(VIEW_TYPE_SCOPE, (leaf) => new ScopeView(leaf, this.settings));
 		this.registerFileExtensions();
@@ -25,7 +41,7 @@ export default class VaultScopePlugin extends Plugin {
 			name: "Comment on selection",
 			hotkeys: [{ modifiers: ["Ctrl", "Alt"], key: "m" }],
 			checkCallback: (checking) => {
-				const view = this.activeScopeView();
+				const view = this.activeCommentTarget();
 				if (!view) return false;
 				if (!checking) view.startComment();
 				return true;
@@ -36,7 +52,7 @@ export default class VaultScopePlugin extends Plugin {
 			id: "open-comment-note",
 			name: "Open the comment note for this file",
 			checkCallback: (checking) => {
-				const view = this.activeScopeView();
+				const view = this.activeCommentTarget();
 				if (!view) return false;
 				if (!checking) void view.openSidecar();
 				return true;
@@ -47,7 +63,7 @@ export default class VaultScopePlugin extends Plugin {
 			id: "reload-comments",
 			name: "Reload comments from disk",
 			checkCallback: (checking) => {
-				const view = this.activeScopeView();
+				const view = this.activeCommentTarget();
 				if (!view) return false;
 				if (!checking) void view.reloadComments();
 				return true;
@@ -80,9 +96,10 @@ export default class VaultScopePlugin extends Plugin {
 		}
 	}
 
-	private activeScopeView(): ScopeView | null {
+	private activeCommentTarget(): CommentTarget | null {
 		const view = this.app.workspace.getActiveViewOfType(ScopeView);
-		return view ?? null;
+		if (view) return view;
+		return this.pdfComments.forLeaf(this.app.workspace.getMostRecentLeaf());
 	}
 
 	private async openActiveFile(): Promise<void> {

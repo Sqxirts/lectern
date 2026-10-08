@@ -48,6 +48,7 @@ export interface CommentRailLike {
 	closeDraft(): void;
 	layout(): void;
 	onScroll(): void;
+	focus(id: string): void;
 	destroy(): void;
 }
 
@@ -107,6 +108,11 @@ export class CommentSession<F = unknown> implements RailDelegate {
 
 	onScroll(): void {
 		this.rail?.onScroll();
+	}
+
+	/** Bring a comment's card forward, e.g. when its highlight is clicked. */
+	focus(id: string): void {
+		this.rail?.focus(id);
 	}
 
 	/** Start a comment from whatever is selected right now. */

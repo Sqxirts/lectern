@@ -34,6 +34,7 @@ class FakeRail implements CommentRailLike {
 	closeDraft() { this.draftTop = null; }
 	layout() { this.layouts++; }
 	onScroll() {}
+	focus() {}
 	destroy() { this.destroyed = true; }
 }
 

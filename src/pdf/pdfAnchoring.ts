@@ -14,10 +14,13 @@ import { CONTEXT_CHARS, type PdfAnchor } from "../comments/types";
  * Pure: no Obsidian, no PDF.js, no DOM. Tests feed it plain objects.
  */
 
-/** The two fields we need from a PDF.js TextItem. */
+/** The fields we use from a PDF.js TextItem. */
 export interface PdfTextItem {
 	str: string;
 	hasEOL?: boolean;
+	/** PDF-space matrix [a, b, c, d, x, y]; y is the baseline, measured up from the bottom. */
+	transform?: number[];
+	height?: number;
 }
 
 /** A run of text on one page, by item index and character offset. End offset is exclusive. */
@@ -49,9 +52,11 @@ export class PdfPageText {
 	readonly text: string;
 	private starts: number[];
 	private lengths: number[];
+	private items: PdfTextItem[];
 
 	constructor(page: number, items: PdfTextItem[]) {
 		this.page = page;
+		this.items = items;
 		this.starts = [];
 		this.lengths = [];
 		let text = "";
@@ -111,6 +116,19 @@ export class PdfPageText {
 			endItem,
 			endOffset: Math.min(this.lengths[endItem], end - this.starts[endItem]),
 		};
+	}
+
+	/**
+	 * Roughly how far down the page an item's top edge sits, 0 to 1. Used to put
+	 * a card level with a comment on a page PDF.js has not rendered yet. `view`
+	 * is the page box [x0, y0, x1, y1]. Rotated pages are not accounted for.
+	 */
+	topFraction(item: number, view: number[]): number | null {
+		const transform = this.items[item]?.transform;
+		const pageHeight = view[3] - view[1];
+		if (!transform || pageHeight <= 0) return null;
+		const height = this.items[item].height || Math.abs(transform[3]) || 0;
+		return (view[3] - (transform[5] + height)) / pageHeight;
 	}
 
 	private validPosition(item: number, offset: number): boolean {

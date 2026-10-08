@@ -3,12 +3,19 @@
    theme is active, light or dark, instead of fighting it. The one opinion is
    the amber accent used for highlights and comment cards. */
 
-.vault-scope-container {
+/* The variables also go on the PDF pieces: those live inside Obsidian's own
+   PDF viewer, outside .vault-scope-container, and would otherwise get none. */
+.vault-scope-container,
+.vault-scope-pdf-strip,
+.vault-scope-pdf-overlay,
+.vault-scope-pdf-highlights {
 	--vault-scope-rail-width: 260px;
 	--vault-scope-accent: #b4772b;
 	--vault-scope-accent-soft: rgba(180, 119, 43, 0.22);
 	--vault-scope-accent-flash: rgba(180, 119, 43, 0.55);
+}
 
+.vault-scope-container {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -18,7 +25,10 @@
 	background: var(--background-primary);
 }
 
-.theme-dark .vault-scope-container {
+.theme-dark .vault-scope-container,
+.theme-dark .vault-scope-pdf-strip,
+.theme-dark .vault-scope-pdf-overlay,
+.theme-dark .vault-scope-pdf-highlights {
 	--vault-scope-accent: #d9a05b;
 	--vault-scope-accent-soft: rgba(217, 160, 91, 0.26);
 	--vault-scope-accent-flash: rgba(217, 160, 91, 0.6);
@@ -656,4 +666,77 @@ td.vault-scope-highlight {
  */
 .vault-scope-slide > .slide {
 	isolation: isolate;
+}
+
+/* ---------- PDF comments (inside Obsidian's PDF viewer) ---------- */
+
+/* Under the text layer, so text stays selectable. Sized to the page's padding box. */
+.vault-scope-pdf-highlights {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.vault-scope-pdf-box {
+	position: absolute;
+	background: var(--vault-scope-accent-soft);
+	border-bottom: 2px solid var(--vault-scope-accent);
+	border-radius: 2px;
+	mix-blend-mode: multiply;
+}
+
+.theme-dark .vault-scope-pdf-box {
+	mix-blend-mode: screen;
+}
+
+.vault-scope-pdf-box.is-resolved {
+	opacity: 0.35;
+}
+
+.vault-scope-pdf-box.is-flashing {
+	background: var(--vault-scope-accent);
+}
+
+/* Stand-in for a comment on a page PDF.js has not rendered yet. */
+.vault-scope-pdf-marker {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	height: 0;
+}
+
+/* The strip the scroller gives up for the rail. Width matches STRIP_WIDTH. */
+.vault-scope-pdf-strip {
+	display: none;
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: calc(var(--vault-scope-rail-width, 260px) + 32px);
+	overflow: hidden;
+	background: var(--background-secondary);
+	border-left: 1px solid var(--background-modifier-border);
+}
+
+.vault-scope-pdf-strip.is-active {
+	display: block;
+}
+
+.vault-scope-rail.is-beside {
+	left: 16px;
+	will-change: transform;
+}
+
+/* Connector lines span scroller and strip; clip them to the viewer. */
+.vault-scope-pdf-overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+	z-index: 3;
+}
+
+.vault-scope-connectors.is-beside {
+	overflow: hidden;
 }
