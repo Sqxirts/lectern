@@ -99,7 +99,7 @@ New `src/pdf/PdfCommentController.ts`, one per open PDF leaf. It owns the store,
 Each step ends with `npm run build`, `npm test`, and a manual check on a real course PDF.
 
 1. ~~Spike.~~ Done 2026-10-07, passed. See "Spike results".
-2. Extract shared comment logic out of `ScopeView`. No behaviour change.
+2. ~~Extract shared comment logic out of `ScopeView`.~~ Done 2026-10-07: `src/comments/CommentSession.ts`, Obsidian-free with the store, rail and notices injected, 13 unit tests. Verified end to end in the live app on the code and pptx fixtures by `tools/pdf-spike/10-comment-smoke.js`.
 3. `PdfAnchor` + `pdfAnchoring.ts` + tests on synthetic `getTextContent` items: exact indices, shifted indices, moved page, whitespace drift, orphan.
 4. `PdfHighlightLayer` + controller, create and display comments.
 5. `CommentRail` outside-the-scroller mode, then rail wiring, connectors, click-highlight-to-focus.

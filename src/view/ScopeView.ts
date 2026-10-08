@@ -9,11 +9,12 @@ import { PptxRenderer } from "../renderers/PptxRenderer";
 import { Toolbar } from "./Toolbar";
 import { ZoomController } from "./ZoomController";
 import { CommentStore } from "../comments/CommentStore";
-import { CommentRail, type RailDelegate } from "../comments/CommentRail";
+import { CommentRail } from "../comments/CommentRail";
+import { CommentSession, type CommentHost } from "../comments/CommentSession";
 import { buildAnchor, clearHighlights, resolveAnchor } from "../comments/anchoring";
-import { newCommentId, nowStamp, type Anchor, type PlacedComment } from "../comments/types";
+import type { PlacedComment, ScopeComment } from "../comments/types";
 
-export class ScopeView extends FileView implements RailDelegate {
+export class ScopeView extends FileView {
 	private settings: ScopeSettings;
 
 	private toolbar!: Toolbar;
@@ -24,10 +25,8 @@ export class ScopeView extends FileView implements RailDelegate {
 
 	private renderer: Renderer | null = null;
 	private zoom: ZoomController | null = null;
-	private rail: CommentRail | null = null;
-	private store: CommentStore | null = null;
+	private comments: CommentSession<TFile> | null = null;
 
-	private draftAnchor: Anchor | null = null;
 	private scrollHandler: (() => void) | null = null;
 	private resizeObserver: ResizeObserver | null = null;
 
@@ -97,11 +96,19 @@ export class ScopeView extends FileView implements RailDelegate {
 			}
 		}, 0);
 
-		this.store = new CommentStore(this.app, file, this.settings.sidecarFolder);
-		await this.store.load();
-
-		this.rail = new CommentRail(this.wrapper, this.content, this, this.settings.showResolvedByDefault);
-		this.placeComments();
+		this.comments = new CommentSession<TFile>(
+			this.commentHost(),
+			new CommentStore(this.app, file, this.settings.sidecarFolder),
+			(delegate) => new CommentRail(this.wrapper, this.content, delegate, this.settings.showResolvedByDefault),
+			{
+				notify: (message) => new Notice(message),
+				openNote: async (note) => {
+					await this.app.workspace.getLeaf("split").openFile(note);
+				},
+				getSelection: () => window.getSelection(),
+			},
+		);
+		await this.comments.start();
 		// The rail only takes its strip once it has comments to show, which is
 		// after the first fit check ran. Shrink again if it now covers the page.
 		window.setTimeout(() => {
@@ -125,10 +132,8 @@ export class ScopeView extends FileView implements RailDelegate {
 		this.renderer = null;
 		this.zoom?.destroy();
 		this.zoom = null;
-		this.rail?.destroy();
-		this.rail = null;
-		this.store = null;
-		this.draftAnchor = null;
+		this.comments?.destroy();
+		this.comments = null;
 
 		if (this.scrollHandler) {
 			this.wrapper?.removeEventListener("scroll", this.scrollHandler);
@@ -152,7 +157,7 @@ export class ScopeView extends FileView implements RailDelegate {
 		this.indicator = this.contentEl.createDiv({ cls: "vault-scope-zoom-indicator", text: "100%" });
 
 		this.zoom = new ZoomController(this.wrapper, this.sizer, this.content, this.indicator, () => {
-			this.rail?.layout();
+			this.comments?.layout();
 			// The toolbar shows the zoom percentage too; it stayed on its first
 			// value because nothing refreshed it.
 			this.refreshToolbar();
@@ -160,128 +165,54 @@ export class ScopeView extends FileView implements RailDelegate {
 	}
 
 	private watchLayout(): void {
-		this.scrollHandler = () => this.rail?.onScroll();
+		this.scrollHandler = () => this.comments?.onScroll();
 		this.wrapper.addEventListener("scroll", this.scrollHandler, { passive: true });
 
 		// Images inside a docx or slide finish loading after render and change
 		// the height, so relayout when the content box actually changes.
 		this.resizeObserver = new ResizeObserver(() => {
 			this.zoom?.measure();
-			this.rail?.layout();
+			this.comments?.layout();
 		});
 		this.resizeObserver.observe(this.content);
 	}
 
 	// ----- comments -------------------------------------------------------
 
-	private placeComments(): void {
-		if (!this.store || !this.rail) return;
-
-		clearHighlights(this.content);
-
-		const placed: PlacedComment[] = this.store.comments.map((comment) => {
-			const result = resolveAnchor(this.content, comment.anchor, comment.id);
-			return { comment, elements: result.elements, orphaned: result.orphaned };
-		});
-
-		this.rail.setComments(placed);
+	/** How this view's rendered DOM plugs into the shared comment workflow. */
+	private commentHost(): CommentHost {
+		return {
+			root: this.content,
+			blockedReason: () => this.renderer?.commentingBlocked() ?? null,
+			buildAnchor: (range) => buildAnchor(this.content, range),
+			place: (comments: ScopeComment[]): PlacedComment[] => {
+				clearHighlights(this.content);
+				return comments.map((comment) => {
+					const result = resolveAnchor(this.content, comment.anchor, comment.id);
+					return { comment, elements: result.elements, orphaned: result.orphaned };
+				});
+			},
+			draftTop: (range) => {
+				const box = range.getBoundingClientRect();
+				return box.top - this.wrapper.getBoundingClientRect().top + this.wrapper.scrollTop;
+			},
+			changed: () => this.refreshToolbar(),
+		};
 	}
 
 	/** Start a comment from whatever is selected right now. */
 	startComment(): void {
-		if (!this.rail || !this.store) return;
-
-		const blocked = this.renderer?.commentingBlocked();
-		if (blocked) {
-			new Notice(blocked);
-			return;
-		}
-
-		const selection = window.getSelection();
-		if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-			new Notice("Select some text first, then add a comment.");
-			return;
-		}
-
-		const range = selection.getRangeAt(0);
-		if (!this.content.contains(range.commonAncestorContainer)) {
-			new Notice("Select text inside the document.");
-			return;
-		}
-
-		const anchor = buildAnchor(this.content, range);
-		if (!anchor) {
-			new Notice("That selection cannot be anchored. Try selecting inside a single slide, page, or line.");
-			return;
-		}
-
-		this.draftAnchor = anchor;
-
-		const box = range.getBoundingClientRect();
-		const top = box.top - this.wrapper.getBoundingClientRect().top + this.wrapper.scrollTop;
-		this.rail.openDraft(top);
-	}
-
-	async commitDraft(body: string): Promise<void> {
-		if (!this.store || !this.draftAnchor) return;
-
-		await this.store.add({
-			id: newCommentId(),
-			anchor: this.draftAnchor,
-			status: "open",
-			created: nowStamp(),
-			body,
-		});
-
-		this.draftAnchor = null;
-		this.rail?.closeDraft();
-		window.getSelection()?.removeAllRanges();
-		this.placeComments();
-		this.refreshToolbar();
-	}
-
-	cancelDraft(): void {
-		this.draftAnchor = null;
-		this.rail?.closeDraft();
-		this.rail?.layout();
-	}
-
-	async saveBody(id: string, body: string): Promise<void> {
-		await this.store?.update(id, { body });
-		this.placeComments();
-	}
-
-	async setStatus(id: string, status: "open" | "resolved"): Promise<void> {
-		await this.store?.update(id, { status });
-		this.placeComments();
-		this.refreshToolbar();
-	}
-
-	async deleteComment(id: string): Promise<void> {
-		await this.store?.remove(id);
-		this.placeComments();
-		this.refreshToolbar();
+		this.comments?.startComment();
 	}
 
 	/** Open the markdown sidecar in a split beside the preview. */
 	async openSidecar(): Promise<void> {
-		if (!this.store) return;
-
-		const file = this.store.sidecarFile();
-		if (!file) {
-			new Notice("No comments on this file yet.");
-			return;
-		}
-
-		const leaf = this.app.workspace.getLeaf("split");
-		await leaf.openFile(file);
+		await this.comments?.openSidecar();
 	}
 
 	/** Reload comments from disk, for when the sidecar was edited by hand. */
 	async reloadComments(): Promise<void> {
-		await this.store?.load();
-		this.placeComments();
-		new Notice("Comments reloaded.");
+		await this.comments?.reload();
 	}
 
 	// ----- toolbar --------------------------------------------------------
@@ -300,7 +231,7 @@ export class ScopeView extends FileView implements RailDelegate {
 			},
 		];
 
-		const openCount = this.store?.comments.filter((c) => c.status === "open").length ?? 0;
+		const openCount = this.comments?.openCount ?? 0;
 
 		const commentGroup: ToolbarItem[] = [
 			{
@@ -313,7 +244,7 @@ export class ScopeView extends FileView implements RailDelegate {
 				id: "open-sidecar",
 				label: "Open the markdown note holding these comments",
 				text: openCount > 0 ? `Notes (${openCount})` : "Notes",
-				disabled: (this.store?.comments.length ?? 0) === 0,
+				disabled: (this.comments?.total ?? 0) === 0,
 				onClick: () => this.openSidecar(),
 			},
 		];
