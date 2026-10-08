@@ -1,0 +1,10 @@
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const m = app.plugins.plugins["vault-scope"].pdfComments;
+const leaf = window.__e2eLeaf;
+const errors = [];
+const origErr = console.error; console.error = (...a) => { errors.push(a.map((x) => x?.stack ?? String(x)).join(" ")); origErr(...a); };
+await m.attach(leaf);
+await sleep(500);
+console.error = origErr;
+const ctrl = m.controllers.get(leaf);
+return { controllers: m.controllers.size, gotOurs: !!ctrl, isCurrent: ctrl?.isCurrent(), errors };

@@ -38,6 +38,20 @@ export interface CodeAnchor extends QuoteAnchor {
 }
 
 /**
+ * A PDF anchor carries two addresses for the same text. `selection` is exact:
+ * PDF.js text-item indices and character offsets, the same four numbers
+ * Obsidian writes into `#page=N&selection=a,b,c,d` links. It breaks when the PDF
+ * is re-exported and the items shift, which is what the quote is for.
+ */
+export interface PdfAnchor extends QuoteAnchor {
+	kind: "pdf";
+	/** 1-based page number. */
+	page: number;
+	/** [startItem, startOffset, endItem, endOffset], end offset exclusive. */
+	selection?: [number, number, number, number];
+}
+
+/**
  * Spreadsheets get an exact address instead of a quote. A cell reference is
  * already stable, so there is nothing to re-find and nothing to orphan.
  */
@@ -48,7 +62,7 @@ export interface XlsxAnchor {
 	cell: string;
 }
 
-export type Anchor = PptxAnchor | DocxAnchor | CodeAnchor | XlsxAnchor;
+export type Anchor = PptxAnchor | DocxAnchor | CodeAnchor | XlsxAnchor | PdfAnchor;
 
 export type CommentStatus = "open" | "resolved";
 
@@ -85,6 +99,7 @@ export function nowStamp(): string {
 export function anchorLabel(anchor: Anchor): string {
 	switch (anchor.kind) {
 		case "pptx": return `Slide ${anchor.slide}`;
+		case "pdf": return `Page ${anchor.page}`;
 		case "docx": return `Page ${anchor.page}`;
 		case "code": return `Line ${anchor.line}`;
 		case "xlsx": return `${anchor.sheet}!${anchor.cell}`;
