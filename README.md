@@ -84,7 +84,9 @@ A PDF anchor stores two addresses for the same text:
 
 ## Install
 
-The [0.1.0 release](https://github.com/Sqxirts/vault-scope/releases/tag/0.1.0) predates the slide-fidelity work and PDF comments, so build from source until a new one is cut.
+**From a release:** download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/Sqxirts/vault-scope/releases/latest) into `<your vault>/.obsidian/plugins/vault-scope/`, then fully quit and reopen Obsidian and enable it under Community plugins. 0.2.0 is the first release with the slide-fidelity work and PDF comments.
+
+**From source:**
 
 ```bash
 git clone https://github.com/Sqxirts/vault-scope.git
