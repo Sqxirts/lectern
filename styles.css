@@ -199,7 +199,96 @@
 	word-break: break-word;
 	background: transparent;
 	padding: 0;
-	color: var(--text-normal);
+	color: var(--code-normal, var(--text-normal));
+}
+
+/* highlight.js wraps tokens in hljs-* spans but ships no colors of its own.
+   Map them onto Obsidian's code-block palette so a viewed file matches a
+   fenced block in a note and follows the user's theme, light and dark. */
+.vault-scope-code-text .hljs-comment,
+.vault-scope-code-text .hljs-quote {
+	color: var(--code-comment);
+	font-style: italic;
+}
+
+/* hljs splits int/void into hljs-type; Obsidian's fenced blocks color them as
+   keywords, so do the same and a viewed file matches its note mirror. */
+.vault-scope-code-text .hljs-keyword,
+.vault-scope-code-text .hljs-type,
+.vault-scope-code-text .hljs-doctag,
+.vault-scope-code-text .hljs-selector-tag {
+	color: var(--code-keyword);
+}
+
+.vault-scope-code-text .hljs-string,
+.vault-scope-code-text .hljs-regexp,
+.vault-scope-code-text .hljs-char {
+	color: var(--code-string);
+}
+
+.vault-scope-code-text .hljs-number,
+.vault-scope-code-text .hljs-literal,
+.vault-scope-code-text .hljs-symbol,
+.vault-scope-code-text .hljs-bullet {
+	color: var(--code-value);
+}
+
+/* built_in is library calls (printf, len, print): colored as functions */
+.vault-scope-code-text .hljs-title,
+.vault-scope-code-text .hljs-section,
+.vault-scope-code-text .hljs-built_in {
+	color: var(--code-function);
+}
+
+.vault-scope-code-text .hljs-tag,
+.vault-scope-code-text .hljs-name,
+.vault-scope-code-text .hljs-selector-id,
+.vault-scope-code-text .hljs-selector-class {
+	color: var(--code-tag);
+}
+
+.vault-scope-code-text .hljs-attr,
+.vault-scope-code-text .hljs-attribute,
+.vault-scope-code-text .hljs-property,
+.vault-scope-code-text .hljs-variable,
+.vault-scope-code-text .hljs-template-variable {
+	color: var(--code-property);
+}
+
+/* Preprocessor lines (#include, #define) and decorators/annotations.
+   Their inner keyword gets the same color so the whole directive reads as
+   one unit; an <include path> or "string" inside keeps the string color. */
+.vault-scope-code-text .hljs-meta,
+.vault-scope-code-text .hljs-meta .hljs-keyword {
+	color: var(--code-important);
+}
+
+.vault-scope-code-text .hljs-meta .hljs-string {
+	color: var(--code-string);
+}
+
+.vault-scope-code-text .hljs-operator {
+	color: var(--code-operator);
+}
+
+.vault-scope-code-text .hljs-punctuation {
+	color: var(--code-punctuation);
+}
+
+.vault-scope-code-text .hljs-addition {
+	color: var(--color-green);
+}
+
+.vault-scope-code-text .hljs-deletion {
+	color: var(--color-red);
+}
+
+.vault-scope-code-text .hljs-emphasis {
+	font-style: italic;
+}
+
+.vault-scope-code-text .hljs-strong {
+	font-weight: bold;
 }
 
 .vault-scope-editing .vault-scope-content,
