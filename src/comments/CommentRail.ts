@@ -128,7 +128,14 @@ export class CommentRail {
 				input.focus();
 				return;
 			}
-			await this.delegate.commitDraft(body);
+			// Disabled until the write lands; Ctrl+Enter goes through save.click(),
+			// which a disabled button ignores, so it is covered too.
+			save.disabled = true;
+			try {
+				await this.delegate.commitDraft(body);
+			} finally {
+				save.disabled = false;
+			}
 		});
 
 		cancel.addEventListener("click", () => {
