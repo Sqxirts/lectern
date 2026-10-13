@@ -175,6 +175,9 @@ export class ScopeView extends FileView {
 			this.comments?.layout();
 		});
 		this.resizeObserver.observe(this.content);
+		// Dragging the pane narrower leaves the content's size alone, so watch
+		// the pane too, or cards and connectors stay where the old width put them.
+		this.resizeObserver.observe(this.wrapper);
 	}
 
 	// ----- comments -------------------------------------------------------
