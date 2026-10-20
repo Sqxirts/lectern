@@ -1,201 +1,96 @@
-# Lectern
+<h1 align="center">Lectern</h1>
 
-An Obsidian plugin that previews Office and code files, lets you **copy text out of PowerPoint slides**, and adds **Word-style margin comments** stored as plain markdown in your vault. The comments work on PDFs too, inside Obsidian's own PDF viewer.
+<p align="center">
+  Read your lecture files inside Obsidian, select and copy the text, and leave margin comments that live in your vault as plain markdown.
+</p>
 
-## Why
+<p align="center">
+  <a href="https://github.com/Sqxirts/lectern/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/Sqxirts/lectern?style=flat-square"></a>
+  <img alt="Obsidian 1.5+" src="https://img.shields.io/badge/obsidian-1.5%2B-7c3aed?style=flat-square">
+  <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/github/license/Sqxirts/lectern?style=flat-square"></a>
+</p>
 
-Existing preview plugins render `.pptx` slides to an HTML5 canvas. Canvas output is pixels: there are no text nodes, so nothing can be selected, Ctrl+F finds nothing, and screen readers read nothing.
+<p align="center">
+  <img src="docs/media/demo.gif" alt="Selecting a line on a PowerPoint slide and adding a margin comment, then doing the same on a PDF through the right-click menu, then opening the markdown note the comments are saved in" width="900">
+</p>
 
-Lectern renders slides to real DOM instead. Selection and copy then work with no special handling, because the text is actually text.
+## What it does
 
-## Features
-
-**Preview**
-- `.docx`, `.xlsx`, `.xls`, `.pptx`, and 132 code and text extensions (the list is `CODE_EXTENSION_GROUPS` in `src/constants.ts`)
-- Syntax highlighting with line numbers
-- Zoom (Ctrl+scroll or toolbar), middle-drag to pan
-- Edit and save, in place, for text files
-- Sheet tabs and merged-cell support for workbooks
-
-**PowerPoint**
-- Slides are real DOM, so drag-select and Ctrl+C work
-- `Copy slide` puts the current slide's text on the clipboard
-- `Copy all` exports the deck as markdown, one heading per slide
-- Speaker notes panel, read straight from the `.pptx` zip
-
-**Comments**
-- Select text, press `Ctrl+Alt+M`, write a note
-- Cards sit in a right margin rail with a connector to the highlight, and stack instead of overlapping
-- Resolve to hide; turn on "show resolved by default" in settings to keep them visible
-
-**PDF comments**
-- The same comments on PDFs, in Obsidian's built-in PDF viewer, with no separate viewer to switch to
-- Select text, `Ctrl+Alt+M`: an amber highlight, a card in a margin strip, a connector, the same sidecar note
-- Or right-click the selection and pick **Highlight and comment**, next to Copy / Copy as quote
-- Page links, search, thumbnails and "Copy link to selection" keep working, because the viewer is Obsidian's own
-- The PDF file is never written to
-- Toggle with "Comments on PDFs" in settings
-
-## How comments are stored
-
-One markdown sidecar per source file, in `File-Notes/` by default:
-
-```
-File-Notes/lecture-3.pptx.comments.md
-```
-
-Your `.pptx` is never rewritten. Rewriting an OOXML zip risks corrupting a file you did not author, and a sidecar is the only version Obsidian's global search can see.
-
-Machine-readable data sits in a `%%scope` block. Obsidian renders `%% %%` as nothing but still indexes it, so the note reads cleanly and nothing is hidden from search:
-
-```markdown
-## Slide 4: "the CIA triad is not a checklist"
-
-%%scope
-{"id":"c3","anchor":{"kind":"pptx","slide":4,"quote":"...","prefix":"Remember ","suffix":". Instead"},"status":"open","created":"2026-09-17T14:02"}
-%%
-
-Check whether this is on the midterm.
-```
-
-Anchors follow the W3C Web Annotation TextQuoteSelector pattern: the exact quote plus about 30 characters either side. On open, resolution tries, in order:
-
-1. prefix + quote + suffix inside the right slide, page or line
-2. the quote alone inside that same scope
-3. the quote anywhere in the file
-4. otherwise the comment is badged **orphaned** in the margin
-
-A comment is never silently dropped.
-
-### PDF anchors
-
-A PDF anchor stores two addresses for the same text:
-
-```json
-{"kind":"pdf","page":1,"selection":[5,0,5,12],"quote":"Introduction","prefix":"...","suffix":"..."}
-```
-
-`selection` is PDF.js text-item indices and character offsets, the same four numbers Obsidian writes into `#page=1&selection=5,0,5,12` links. It is exact while the PDF is unchanged. The quote is what survives a re-export, when the item boundaries shift. Resolution runs on `page.getTextContent()` rather than the DOM, because PDF.js only renders text for pages near the viewport:
-
-1. the stored indices, if they still cover the stored quote
-2. prefix + quote + suffix on the stored page
-3. the quote alone on that page
-4. the same on other pages, nearest page first
-5. otherwise orphaned
+- **Opens Office and code files.** `.pptx`, `.docx`, `.xlsx`, `.xls`, and 130+ code and text formats, with syntax highlighting, zoom and pan.
+- **Slide text is real text.** Drag-select and `Ctrl+C` work on slides. Other preview plugins draw slides to a canvas, which is just pixels.
+- **Copies a deck out as markdown.** `Copy slide` grabs one slide; `Copy all` exports the whole deck with one heading per slide. Speaker notes show under each slide.
+- **Word-style margin comments.** Select text, press `Ctrl+Alt+M`, write a note. Cards sit in a right-hand margin with a line to the highlight.
+- **Comments on PDFs too,** inside Obsidian's own PDF viewer. Right-click a selection and pick **Highlight and comment**. Page links, search and thumbnails keep working.
+- **Your files are never modified.** Comments go to a sidecar note in `File-Notes/`, so they show up in search, backlinks and sync like any other note.
 
 ## Install
 
-**From a release:** download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/Sqxirts/lectern/releases/latest) into `<your vault>/.obsidian/plugins/lectern/`, then fully quit and reopen Obsidian and enable it under Community plugins. 0.2.0 is the first release with the slide-fidelity work and PDF comments.
+**From a release (recommended).** Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/Sqxirts/lectern/releases/latest) into:
 
-**From source:**
+```
+<your vault>/.obsidian/plugins/lectern/
+```
+
+Then fully quit and reopen Obsidian, and enable **Lectern** under *Settings → Community plugins*. A plugin reload is not enough the first time, because Obsidian only registers new file types at startup.
+
+**From source.**
 
 ```bash
 git clone https://github.com/Sqxirts/lectern.git
 cd lectern
 npm install
 npm approve-scripts esbuild   # npm blocks postinstall scripts by default
-cp .env.example .env.local    # then edit it to point at your vault
+cp .env.example .env.local    # set LECTERN_OUT to <vault>/.obsidian/plugins/lectern
 npm run build
 ```
 
-Set `LECTERN_OUT` in `.env.local` to your vault's plugin folder:
+Without `LECTERN_OUT` the build goes to `./dist`.
 
+## Usage
+
+| To | Do |
+|---|---|
+| Comment on a selection | `Ctrl+Alt+M`, or the **Comment** toolbar button |
+| Comment on a PDF selection | Right-click → **Highlight and comment**, or `Ctrl+Alt+M` |
+| Copy one slide / the whole deck | **Copy slide** / **Copy all** in the toolbar |
+| Zoom / pan | `Ctrl+scroll` or the toolbar; middle-drag to pan |
+| Hide a finished comment | **Resolve** on the card |
+| Edit a text or code file | **Edit**, then **Save** in the toolbar |
+
+Settings cover the comment folder, default zoom, speaker notes, showing resolved comments, PDF comments on or off, and per-file-type toggles for when another plugin already handles a format.
+
+A comment card and its sidecar entry look like this:
+
+```markdown
+## Slide 2: "The triad is a way of asking questions, not a checklist"
+
+Likely midterm question. Compare with STRIDE in Reading 3.
 ```
-LECTERN_OUT=C:/path/to/YourVault/.obsidian/plugins/lectern
-```
 
-Without it the build goes to `./dist` and you can copy `main.js`, `manifest.json` and `styles.css` across by hand.
+Each comment remembers the exact quote plus the text around it. If the file changes, Lectern finds the quote again; if it can't, the card is flagged **orphaned** instead of disappearing. Details in [docs/comments.md](docs/comments.md).
 
-Then **fully quit and reopen Obsidian**. Registering a new view type only happens at startup, so a plugin reload is not enough. Enable Lectern under Settings, Community plugins.
+## Known limits
+
+- Slide fidelity is practical, not pixel-perfect. No SmartArt, animations, embedded media or 3D, and fonts are not embedded. That is the trade for selectable text.
+- PDF comments need a text layer, so scanned PDFs can't be commented. One comment can't span two pages, and PDF embeds inside notes (`![[x.pdf]]`) aren't covered.
+- PDF comments use Obsidian internals that aren't public API (tested on Obsidian 1.14.4). If an update breaks them, the feature switches itself off with a notice and the viewer keeps working. It also stays off while PDF++ is enabled.
+- Code files can be commented in read mode only.
+- Spreadsheets are capped at 5,000 rows and 256 columns per sheet.
 
 ## Development
 
 ```bash
 npm run dev        # rebuild on save
-npm test           # 163 vitest tests
+npm test           # vitest
 npm run typecheck
 ```
 
-After the first launch you can pick up a rebuild by toggling the plugin off and on, without restarting Obsidian.
+After the first launch you can pick up a rebuild by toggling the plugin off and on. Test fixtures are generated, not committed: `python fixtures/make_fixtures.py` (needs `python-pptx`, `python-docx`, `openpyxl`).
 
-Test fixtures are generated, not committed:
-
-```bash
-pip install python-pptx python-docx openpyxl
-python fixtures/make_fixtures.py
-```
-
-## Architecture
-
-One `FileView` subclass owns the chrome (toolbar, zoom, comment rail) and delegates content to a renderer chosen by extension.
-
-```
-src/
-  main.ts                 plugin entry: views, extensions, commands
-  view/LecternView.ts       the FileView, orchestrates everything
-  view/Toolbar.ts         toolbar rendering
-  view/ZoomController.ts  transform-based zoom, pan, sizer sync
-  renderers/              one per file kind, behind a shared interface
-  pptx/extract.ts         JSZip walk for slide text and speaker notes
-  comments/anchoring.ts   build and resolve text anchors in the DOM
-  comments/CommentStore.ts   vault I/O for the sidecar
-  comments/sidecarFormat.ts  the markdown format, no Obsidian imports
-  comments/CommentRail.ts    margin cards and connectors
-  comments/CommentSession.ts the comment workflow, shared by LecternView and PDF tabs
-  pdf/                    PDF comments inside Obsidian's own viewer (see below)
-  util/safeHtml.ts        sanitise renderer HTML before inserting it
-```
-
-Renderers sit behind an interface, so swapping the pptx engine is a one-file change.
-
-Anchor scoping contract: any element a comment can attach inside carries `data-scope-kind` (`pptx` / `docx` / `code` / `xlsx`) and `data-scope-index` (slide, page, line, or sheet name). `anchoring.ts` reads those and needs to know nothing else about the renderer.
-
-### PDF comments
-
-PDFs are not opened by Lectern. Obsidian's PDF viewer keeps them, and `PdfCommentManager` attaches one `PdfCommentController` to each open PDF tab:
-
-```
-pdf/pdfInternals.ts        one probe for every private Obsidian / PDF.js field used
-pdf/pdfAnchoring.ts        anchors on PDF.js text items, pure, no DOM
-pdf/pdfDom.ts              DOM selection <-> item span
-pdf/pdfHighlights.ts       percent-unit boxes under the text layer, markers for unrendered pages
-pdf/PdfCommentController.ts  one PDF tab: session host, events, the rail strip
-pdf/PdfCommentManager.ts   one controller per PDF tab, kept in sync on workspace events
-```
-
-**This relies on Obsidian internals that are not public API.** The only public PDF hook is `loadPdfJs()`. The controller reads `view.viewer.child`, its PDF.js `PDFViewer` and event bus, and subscribes to `textlayerrendered`. It never patches prototypes. Tested on Obsidian 1.14.4 with PDF.js 5.3.34. If an update changes those fields, `probePdfInternals` returns null, the feature switches itself off with a notice, and the viewer is left untouched. It also stays off while PDF++ is enabled, since both would draw over the same pages.
-
-Two PDF.js behaviours shape the code:
-
-- **The fit ignores padding.** PDF.js fits pages to the scroller's `clientWidth`, which includes padding. So the rail can't reserve space with padding the way `.has-rail` does elsewhere. The scroller is narrowed (`right: 292px`, then `child.onResize()`), and the rail sits beside it, translating with the scroll (`RailBeside`).
-- **The text layer gets thrown away.** It is rebuilt on zoom, and far-off pages are emptied with no event at all. Highlights are redrawn on `textlayerrendered`, and anything detached is redrawn on scroll and resize.
-
-`docs/pdf-highlights-scope.md` has the full design and the measurements behind it. `tools/pdf-spike/` has the CDP scripts used to test against a running Obsidian started with `--remote-debugging-port`.
-
-## Security
-
-`pptx-to-html` returns HTML strings built from a file you may not have authored, so everything goes through `util/safeHtml.ts` first: `<script>`, `<iframe>`, `<object>`, `javascript:` URLs and all `on*` attributes are stripped in a detached document before insertion. Inline `style` attributes are kept deliberately, because the renderer positions every shape with them, which is why Obsidian's own `sanitizeHTMLToDom()` is not used here.
-
-## Known limits
-
-- `@jvmr/pptx-to-html` describes its own fidelity as practical, not pixel-perfect. No SmartArt, animations, embedded media or 3D, and fonts are not embedded. That is the trade for selectable text.
-- Commenting on code files is read-mode only. A highlight span cannot live inside a `<textarea>`.
-- PDF comments need a text layer. Scanned PDFs have nothing to select. One comment cannot span two pages. PDF embeds inside notes (`![[x.pdf]]`) are not covered.
-- Spreadsheets are capped at 5,000 rows and 256 columns per sheet.
-- If another preview plugin claims the same extensions, Lectern skips those it cannot register. Per-extension toggles are in settings.
-
-## Dependencies
-
-| Package | Purpose |
-|---|---|
-| `@jvmr/pptx-to-html` | pptx to DOM, the reason slide text is selectable |
-| `docx-preview` | docx rendering |
-| SheetJS `xlsx` | workbook parsing, installed from the SheetJS CDN, not npm |
-| `highlight.js` | syntax highlighting |
-| `jszip` | reading speaker notes and slide text from the pptx zip |
-
-**Note on SheetJS:** the `xlsx` package on npm is frozen at 0.18.5 (2022). SheetJS moved distribution to their own CDN and treats the registry copy as stale. `package.json` therefore points at `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`.
+- [docs/architecture.md](docs/architecture.md): how the code is laid out, the PDF internals, HTML sanitising, dependencies
+- [docs/comments.md](docs/comments.md): the sidecar format and how anchors are resolved
+- [tools/demo/](tools/demo/): re-records the GIF above
 
 ## Licence
 
-MIT
+[MIT](LICENSE)
