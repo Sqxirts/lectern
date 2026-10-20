@@ -445,6 +445,8 @@ export class CommentRail {
 	private drawConnectorsBeside(): void {
 		const overlay = this.beside!.overlay.getBoundingClientRect();
 		const scroller = this.wrapper.getBoundingClientRect();
+		// The rail's own box already includes the scroll transform from pin().
+		const rail = this.railEl.getBoundingClientRect();
 
 		this.connectorEl.empty();
 		this.connectorEl.setAttribute("width", String(overlay.width));
@@ -456,14 +458,16 @@ export class CommentRail {
 			if (!card || !target?.isConnected) continue;
 
 			const t = target.getBoundingClientRect();
-			const c = card.getBoundingClientRect();
 			// Skip lines whose highlight has scrolled out of the scroller.
 			if (t.bottom < scroller.top || t.top > scroller.bottom) continue;
 
 			const fromX = Math.min(t.right, scroller.right) - overlay.left;
 			const fromY = t.top - overlay.top + t.height / 2;
-			const toX = c.left - overlay.left;
-			const toY = c.top - overlay.top + 14;
+			// Where the card is going, not where it is. `top` animates for 0.15s,
+			// so after a zoom the live box is still the old spot, and nothing
+			// redraws when the transition ends: every line pointed at empty space.
+			const toX = rail.left + card.offsetLeft - overlay.left;
+			const toY = rail.top + parseFloat(card.style.top || "0") - overlay.top + 14;
 
 			const line = this.connectorEl.createSvg("path");
 			line.classList.add("lectern-connector");
