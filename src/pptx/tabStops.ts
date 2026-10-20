@@ -51,8 +51,10 @@ export function applyTabStops(root: HTMLElement): number {
 		if (!scale) continue;
 
 		for (const tab of tabs) {
-			// Collapse first, so the measurement is where the tab starts.
-			Object.assign(tab.style, { display: "inline-block", width: "0px", height: "1px", overflow: "hidden" });
+			// Collapse first, so the measurement is where the tab starts:
+			// .lectern-tab is a zero-width inline-block in styles.css, and
+			// dropping any width from an earlier pass falls back to it.
+			tab.style.removeProperty("width");
 			tab.textContent = "";
 			const at = tab.getBoundingClientRect();
 			const x = (at.left - p.getBoundingClientRect().left) / scale;
@@ -61,7 +63,7 @@ export function applyTabStops(root: HTMLElement): number {
 			// PowerPoint starts the next line flush, not indented by the tab.
 			// Sized, it would have dropped to the new line with its width
 			// intact (CYBR 310 week 1 slide 47, four indented lines).
-			if (tab.getBoundingClientRect().top > at.top + 1) tab.style.width = "0px";
+			if (tab.getBoundingClientRect().top > at.top + 1) tab.style.removeProperty("width");
 			sized++;
 		}
 	}

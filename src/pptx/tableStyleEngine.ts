@@ -289,7 +289,7 @@ export function applyTableCellStyles(slide: HTMLElement, tables: (StyledTable | 
 
 		// The renderer's own guess at a table background and header weight.
 		table.style.background = styledTable.background ?? "transparent";
-		for (const row of rows) row.style.fontWeight = "";
+		for (const row of rows) row.style.removeProperty("font-weight");
 		table.classList.add(STYLED_TABLE_CLASS);
 
 		rows.forEach((row, r) => {
