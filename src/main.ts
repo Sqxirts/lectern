@@ -3,6 +3,8 @@ import { ALL_EXTENSIONS, NEVER_REGISTER, PLUGIN_NAME, VIEW_TYPE_SCOPE, classify,
 import { DEFAULT_SETTINGS, ScopeSettingTab, type ScopeSettings } from "./settings";
 import { ScopeView } from "./view/ScopeView";
 import { PdfCommentManager } from "./pdf/PdfCommentManager";
+import type { PdfCommentController } from "./pdf/PdfCommentController";
+import { patchPdfContextMenu } from "./pdf/pdfContextMenu";
 
 /** What the comment commands need, from either a Vault Scope view or a PDF tab. */
 interface CommentTarget {
@@ -24,6 +26,7 @@ export default class VaultScopePlugin extends Plugin {
 		this.registerEvent(this.app.workspace.on("layout-change", syncPdf));
 		this.registerEvent(this.app.workspace.on("file-open", syncPdf));
 		this.register(() => this.pdfComments.destroyAll());
+		this.register(patchPdfContextMenu((target) => this.pdfControllerFor(target)));
 
 		this.registerView(VIEW_TYPE_SCOPE, (leaf) => new ScopeView(leaf, this.settings));
 		this.registerFileExtensions();
@@ -100,6 +103,14 @@ export default class VaultScopePlugin extends Plugin {
 		const view = this.app.workspace.getActiveViewOfType(ScopeView);
 		if (view) return view;
 		return this.pdfComments.forLeaf(this.app.workspace.getMostRecentLeaf());
+	}
+
+	/** The PDF tab a right-clicked element sits in, if we are commenting on it. */
+	private pdfControllerFor(target: Element): PdfCommentController | null {
+		for (const leaf of this.app.workspace.getLeavesOfType("pdf")) {
+			if (leaf.view.containerEl.contains(target)) return this.pdfComments.forLeaf(leaf);
+		}
+		return null;
 	}
 
 	private async openActiveFile(): Promise<void> {
