@@ -447,7 +447,7 @@ function buildLineSvg(art: ShapeArtModel, line: NonNullable<ShapeArtModel["line"
 	});
 	if (art.rotationDeg) {
 		svg.style.transform = `rotate(${art.rotationDeg}deg)`;
-		svg.style.transformOrigin = "center";
+		svg.classList.add("lectern-transformed");
 	}
 
 	const stroke = art.stroke!;
@@ -507,7 +507,7 @@ function buildSvg(art: ShapeArtModel, zIndex: string): SVGSVGElement {
 	if (art.flipV) transforms.push("scaleY(-1)");
 	if (transforms.length) {
 		svg.style.transform = transforms.join(" ");
-		svg.style.transformOrigin = "center";
+		svg.classList.add("lectern-transformed");
 	}
 
 	let fillValue = "none";

@@ -456,6 +456,17 @@
 	padding-right: 0.4em;
 }
 
+.lectern-tab {
+	display: inline-block;
+	width: 0;
+	height: 1px;
+	overflow: hidden;
+}
+
+.lectern-transformed {
+	transform-origin: center;
+}
+
 .lectern-u-double {
 	text-decoration-style: double;
 }

@@ -55,9 +55,9 @@ export class ZoomController {
 		const previous = this.content.style.transform;
 		const sizerWidth = this.sizer.style.width;
 		const sizerHeight = this.sizer.style.height;
-		this.content.style.transform = "none";
-		this.sizer.style.width = "";
-		this.sizer.style.height = "";
+		this.content.setCssStyles({ transform: "none" });
+		this.sizer.style.removeProperty("width");
+		this.sizer.style.removeProperty("height");
 		this.natural = {
 			width: this.content.scrollWidth,
 			height: this.content.scrollHeight,
