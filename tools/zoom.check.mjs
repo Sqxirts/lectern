@@ -17,7 +17,8 @@ const source = resolve(process.argv[2] ?? join(root, "src/view/ZoomController.ts
 
 const bundle = execFileSync("npx", ["esbuild", "--bundle", "--format=iife", "--global-name=Z", "--loader=ts"], {
 	cwd: root,
-	input: `export { ZoomController } from ${JSON.stringify(source.replace(/\\/g, "/"))};`,
+	input: `import ${JSON.stringify(join(root, "tests/helpers/domShim.ts").replace(/\\/g, "/"))};
+export { ZoomController } from ${JSON.stringify(source.replace(/\\/g, "/"))};`,
 	shell: true,
 	encoding: "utf-8",
 });

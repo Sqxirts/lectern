@@ -27,8 +27,7 @@ export function renderedTextDivs(page: PdfPageView): Node[] | null {
 function layerFor(page: PdfPageView): HTMLElement {
 	let layer = page.div.querySelector<HTMLElement>(`:scope > .${LAYER_CLASS}`);
 	if (!layer) {
-		layer = document.createElement("div");
-		layer.className = LAYER_CLASS;
+		layer = createDiv({ cls: LAYER_CLASS });
 		const textLayer = page.textLayer?.div;
 		if (textLayer && textLayer.parentElement === page.div) page.div.insertBefore(layer, textLayer);
 		else page.div.appendChild(layer);
@@ -84,8 +83,7 @@ export function drawBoxes(page: PdfPageView, commentId: string, span: PdfSpan, r
 
 	const out: HTMLElement[] = [];
 	for (const r of mergeLineRects([...range.getClientRects()])) {
-		const el = document.createElement("div");
-		el.className = PDF_BOX_CLASS;
+		const el = createDiv({ cls: PDF_BOX_CLASS });
 		if (resolved) el.classList.add("is-resolved");
 		el.dataset.commentId = commentId;
 		el.style.left = `${((r.left - box.left) / box.width) * 100}%`;
@@ -105,8 +103,7 @@ export function drawBoxes(page: PdfPageView, commentId: string, span: PdfSpan, r
  */
 export function drawMarker(page: PdfPageView, commentId: string, topFraction: number): HTMLElement {
 	clearPage(page, commentId);
-	const el = document.createElement("div");
-	el.className = PDF_MARKER_CLASS;
+	const el = createDiv({ cls: PDF_MARKER_CLASS });
 	el.dataset.commentId = commentId;
 	el.style.top = `${Math.min(Math.max(topFraction, 0), 1) * 100}%`;
 	layerFor(page).appendChild(el);

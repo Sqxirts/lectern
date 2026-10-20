@@ -22,7 +22,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const src = (p) => JSON.stringify(join(root, p).replace(/\\/g, "/"));
 const bundle = execFileSync("npx", ["esbuild", "--bundle", "--format=iife", "--global-name=V", "--loader=ts"], {
 	cwd: root,
-	input: `export { ZoomController } from ${src("src/view/ZoomController.ts")};
+	input: `import ${src("tests/helpers/domShim.ts")};
+export { ZoomController } from ${src("src/view/ZoomController.ts")};
 export { CommentRail } from ${src("src/comments/CommentRail.ts")};`,
 	shell: true,
 	encoding: "utf-8",

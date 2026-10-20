@@ -24,7 +24,7 @@ function applyRunStyle(el: HTMLElement, s: RunStyle): void {
 	if (s.strike) lines.push("line-through");
 	if (lines.length) {
 		el.style.textDecorationLine = lines.join(" ");
-		if (s.underline === "double") el.classList.add("lectern-u-double");
+		if (s.underline === "double") el.setCssStyles({ textDecorationStyle: "double" });
 	}
 
 	if (s.letterSpacingPt) el.style.letterSpacing = `${s.letterSpacingPt}pt`;
@@ -44,8 +44,7 @@ function lineHeightCss(p: ParagraphModel): string {
 }
 
 function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
-	const el = document.createElement("div");
-	el.className = "lectern-p";
+	const el = createDiv({ cls: "lectern-p" });
 	el.style.textAlign = p.align;
 	el.style.paddingLeft = `${p.marginLeftPx}px`;
 	if (p.marginRightPx) el.style.paddingRight = `${p.marginRightPx}px`;
@@ -78,7 +77,7 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 	const hasText = p.runs.some((r) => r.text !== "\n" && r.text !== "");
 	if (!hasText) {
 		// An empty paragraph still takes a line at the paragraph mark's size.
-		const spacer = document.createElement("span");
+		const spacer = createSpan();
 		spacer.style.fontSize = `${p.endSizePt}pt`;
 		// Zero-width space: gives the line a height without visible text.
 		spacer.textContent = "\u200B";
@@ -87,8 +86,9 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 	}
 
 	if (p.bullet) {
-		const b = document.createElement("span");
-		b.className = "lectern-bullet";
+		const b = createSpan({ cls: "lectern-bullet" });
+		// The paragraph's hanging indent must not apply inside the bullet box.
+		b.setCssStyles({ textIndent: "0" });
 		b.textContent = p.bullet.text;
 		// A hanging indent reserves the bullet's column; without one, a small gap.
 		if (p.indentPx < 0) b.style.minWidth = `${-p.indentPx}px`;
@@ -107,10 +107,10 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 
 	for (const run of p.runs) {
 		if (run.text === "\n") {
-			el.appendChild(document.createElement("br"));
+			el.appendChild(createEl("br"));
 			continue;
 		}
-		const span = document.createElement("span");
+		const span = createSpan();
 		let text = run.text;
 		if (dropLeadingTab && text) {
 			if (text.startsWith("\t")) text = text.slice(1);
@@ -120,8 +120,7 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 		// next stop. A literal tab character only knows the default spacing.
 		text.split("\t").forEach((part, i) => {
 			if (i > 0) {
-				const tab = document.createElement("span");
-				tab.className = TAB_CLASS;
+				const tab = createSpan({ cls: TAB_CLASS });
 				tab.textContent = "\t";
 				span.appendChild(tab);
 			}
@@ -135,7 +134,7 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 }
 
 function fillBody(target: HTMLElement, body: TextBodyModel): void {
-	const frag = document.createDocumentFragment();
+	const frag = createFragment();
 	body.paragraphs.forEach((p, i) => frag.appendChild(buildParagraph(p, i === 0)));
 	target.replaceChildren(frag);
 	target.style.padding = `${body.insetsPx.top}px ${body.insetsPx.right}px ${body.insetsPx.bottom}px ${body.insetsPx.left}px`;
@@ -180,7 +179,7 @@ export function applyTextBoxes(slide: HTMLElement, model: SlideTextModel | undef
 	const host = slide.querySelector<HTMLElement>(".slide") ?? slide;
 	for (const body of pool) {
 		if (!body.hasField || !body.rectPx) continue;
-		const box = document.createElement("div");
+		const box = createDiv();
 		Object.assign(box.style, {
 			position: "absolute",
 			left: `${body.rectPx.x}px`,

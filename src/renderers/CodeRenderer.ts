@@ -15,14 +15,14 @@ import { Renderer, type ToolbarItem } from "./Renderer";
  */
 function splitHighlightedIntoLines(source: HTMLElement): DocumentFragment[] {
 	const lines: DocumentFragment[] = [];
-	let line = document.createDocumentFragment();
+	let line = createFragment();
 	// Clones of the currently open spans for the line being built, outermost first.
 	let path: HTMLElement[] = [];
 	let cursor: Node = line;
 
 	function startNewLine(): void {
 		lines.push(line);
-		line = document.createDocumentFragment();
+		line = createFragment();
 		let parent: Node = line;
 		const rebuilt: HTMLElement[] = [];
 		for (const el of path) {
@@ -116,6 +116,8 @@ export class CodeRenderer extends Renderer {
 
 		const lines = splitHighlightedIntoLines(holder);
 		const grid = this.ctx.container.createDiv({ cls: "lectern-code" });
+		// Gutter width for styles.css: as many characters as the longest line number.
+		grid.setCssProps({ "--lectern-code-digits": String(String(lines.length).length) });
 
 		lines.forEach((fragment, index) => {
 			const lineNumber = index + 1;

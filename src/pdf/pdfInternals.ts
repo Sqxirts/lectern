@@ -24,9 +24,14 @@ export interface PdfPageView {
 	} | null;
 }
 
+/** The only event we subscribe to; `source` is the page whose text layer was rebuilt. */
+export interface TextLayerRenderedEvent {
+	source?: PdfPageView;
+}
+
 export interface PdfEventBus {
-	_on(name: string, listener: (event: any) => void): void;
-	_off(name: string, listener: (event: any) => void): void;
+	_on(name: "textlayerrendered", listener: (event: TextLayerRenderedEvent) => void): void;
+	_off(name: "textlayerrendered", listener: (event: TextLayerRenderedEvent) => void): void;
 }
 
 export interface PdfInternals {
@@ -52,31 +57,39 @@ export interface PdfDocument {
 
 const fn = (value: unknown): boolean => typeof value === "function";
 
+/** Read one property off something we know nothing about. */
+function field(obj: unknown, key: string): unknown {
+	return typeof obj === "object" && obj !== null ? (obj as Record<string, unknown>)[key] : undefined;
+}
+
+const isElement = (value: unknown): value is HTMLElement => value instanceof HTMLElement;
+
 /** The PDF internals behind an Obsidian view, or null if this is not a PDF view or Obsidian changed shape. */
 export function probePdfInternals(view: View | null | undefined): PdfInternals | null {
 	if (!view || view.getViewType() !== "pdf") return null;
 
-	const child = (view as any).viewer?.child;
-	const app = child?.pdfViewer;
-	const viewer = app?.pdfViewer;
-	const bus = app?.eventBus;
+	const child = field(field(view, "viewer"), "child");
+	const app = field(child, "pdfViewer");
+	const viewer = field(app, "pdfViewer");
+	const bus = field(app, "eventBus");
 
 	const ok =
-		child?.containerEl instanceof HTMLElement &&
-		fn(child.onResize) &&
-		fn(bus?._on) &&
-		fn(bus?._off) &&
-		viewer?.container instanceof HTMLElement &&
-		fn(viewer.getPageView) &&
-		typeof viewer.pagesCount === "number";
+		isElement(field(child, "containerEl")) &&
+		fn(field(child, "onResize")) &&
+		fn(field(bus, "_on")) &&
+		fn(field(bus, "_off")) &&
+		isElement(field(viewer, "container")) &&
+		fn(field(viewer, "getPageView")) &&
+		typeof field(viewer, "pagesCount") === "number";
 
 	if (!ok) return null;
 
+	// Every field above was checked, so these casts describe what is there.
 	return {
-		child,
-		bus,
-		viewer,
-		document: () => app.pdfDocument ?? null,
+		child: child as PdfInternals["child"],
+		bus: bus as PdfEventBus,
+		viewer: viewer as PdfInternals["viewer"],
+		document: () => (field(app, "pdfDocument") as PdfDocument | undefined) ?? null,
 	};
 }
 
@@ -86,6 +99,6 @@ export function probePdfInternals(view: View | null | undefined): PdfInternals |
  */
 export function isPdfViewStillLoading(view: View | null | undefined): boolean {
 	if (!view || view.getViewType() !== "pdf") return false;
-	const child = (view as any).viewer?.child;
-	return !child?.pdfViewer?.pdfViewer;
+	const child = field(field(view, "viewer"), "child");
+	return !field(field(child, "pdfViewer"), "pdfViewer");
 }

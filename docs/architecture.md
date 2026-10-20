@@ -59,4 +59,6 @@ Two PDF.js behaviours shape the code:
 | `highlight.js` | syntax highlighting |
 | `jszip` | reading speaker notes and slide text from the pptx zip |
 
+**Note on JSZip:** its package `browser` field points bundlers at a prebuilt `dist/jszip.min.js` that inlines old polyfills (`lie`/`immediate`, `setimmediate`). Those inject `<script>` elements and call `new Function()`, which the community directory scan rejects, even though Electron never takes those branches. `esbuild.config.mjs` therefore bundles JSZip's CommonJS source and aliases the polyfills to the native stand-ins in `shims/`. `readable-stream` is stubbed too, since Lectern never asks JSZip for Node streams.
+
 **Note on SheetJS:** the `xlsx` package on npm is frozen at 0.18.5 (2022). SheetJS moved distribution to their own CDN and treats the registry copy as stale. `package.json` therefore points at `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`.

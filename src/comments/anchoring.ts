@@ -132,7 +132,7 @@ export function looseIndexWithin(haystack: string, needle: string, start: number
 function findScopeElement(root: HTMLElement, node: Node): HTMLElement | null {
 	let current: Node | null = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
 	while (current && current !== root.parentElement) {
-		if (current instanceof HTMLElement && current.dataset.scopeKind) return current;
+		if (current.instanceOf(HTMLElement) && current.dataset.scopeKind) return current;
 		current = current.parentElement;
 	}
 	return null;
@@ -207,8 +207,7 @@ function wrapRange(map: TextMap, start: number, end: number, commentId: string):
 		if (target.end < node.length) node.splitText(target.end);
 		if (target.start > 0) node = node.splitText(target.start);
 
-		const span = document.createElement("span");
-		span.className = HIGHLIGHT_CLASS;
+		const span = createSpan({ cls: HIGHLIGHT_CLASS });
 		span.dataset.commentId = commentId;
 		node.parentNode?.insertBefore(span, node);
 		span.appendChild(node);

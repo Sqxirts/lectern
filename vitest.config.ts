@@ -10,5 +10,7 @@ export default defineConfig({
 		// so the tests run against jsdom rather than bare node.
 		environment: "jsdom",
 		include: ["tests/**/*.test.ts"],
+		// Obsidian's global DOM helpers (createDiv, setCssStyles, ...) for jsdom.
+		setupFiles: ["tests/helpers/domShim.ts"],
 	},
 });

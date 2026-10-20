@@ -55,7 +55,7 @@ export function parseUntrustedHtml(html: string): DocumentFragment {
 		scrubElement(el);
 	}
 
-	const fragment = document.createDocumentFragment();
+	const fragment = createFragment();
 	for (const node of [...doc.body.childNodes]) {
 		fragment.appendChild(document.importNode(node, true));
 	}
