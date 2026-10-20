@@ -9,6 +9,7 @@ import { patchPdfContextMenu } from "./pdf/pdfContextMenu";
 /** What the comment commands need, from either a Lectern view or a PDF tab. */
 interface CommentTarget {
 	startComment(): void;
+	toggleResolved(): void;
 	openSidecar(): Promise<void>;
 	reloadComments(): Promise<void>;
 }
@@ -57,6 +58,17 @@ export default class LecternPlugin extends Plugin {
 				const view = this.activeCommentTarget();
 				if (!view) return false;
 				if (!checking) void view.openSidecar();
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: "toggle-resolved",
+			name: "Show or hide resolved comments",
+			checkCallback: (checking) => {
+				const view = this.activeCommentTarget();
+				if (!view) return false;
+				if (!checking) view.toggleResolved();
 				return true;
 			},
 		});

@@ -110,6 +110,7 @@ function session(store: SlowStore, notices: string[] = []) {
 	let rails = 0;
 	const rail: CommentRailLike = {
 		setComments() {}, openDraft() {}, closeDraft() {}, layout() {}, onScroll() {}, focus() {}, destroy() {},
+		setShowResolved() {}, resolvedVisible: false,
 	};
 	const s = new CommentSession<string>(host, store, () => { rails++; return rail; }, {
 		notify: (m) => notices.push(m),

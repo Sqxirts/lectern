@@ -227,6 +227,10 @@ export class LecternView extends FileView {
 	}
 
 	/** Open the markdown sidecar in a split beside the preview. */
+	toggleResolved(): void {
+		this.comments?.toggleResolved();
+	}
+
 	async openSidecar(): Promise<void> {
 		await this.comments?.openSidecar();
 	}
@@ -253,6 +257,8 @@ export class LecternView extends FileView {
 		];
 
 		const openCount = this.comments?.openCount ?? 0;
+		const resolvedCount = this.comments?.resolvedCount ?? 0;
+		const showingResolved = this.comments?.resolvedVisible ?? false;
 
 		const commentGroup: ToolbarItem[] = [
 			{
@@ -267,6 +273,13 @@ export class LecternView extends FileView {
 				text: openCount > 0 ? `Notes (${openCount})` : "Notes",
 				disabled: (this.comments?.total ?? 0) === 0,
 				onClick: () => this.openSidecar(),
+			},
+			{
+				id: "toggle-resolved",
+				label: showingResolved ? "Hide resolved comments" : "Show resolved comments, to read or reopen them",
+				text: showingResolved ? "Hide resolved" : resolvedCount > 0 ? `Show resolved (${resolvedCount})` : "Show resolved",
+				disabled: !showingResolved && resolvedCount === 0,
+				onClick: () => this.toggleResolved(),
 			},
 		];
 

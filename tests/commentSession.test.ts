@@ -35,6 +35,8 @@ class FakeRail implements CommentRailLike {
 	layout() { this.layouts++; }
 	onScroll() {}
 	focus() {}
+	resolvedVisible = false;
+	setShowResolved(v: boolean) { this.resolvedVisible = v; }
 	destroy() { this.destroyed = true; }
 }
 
@@ -97,6 +99,27 @@ describe("CommentSession", () => {
 		expect(rail.placed.map((p) => p.comment.id)).toEqual(["a", "b"]);
 		expect(session.total).toBe(2);
 		expect(session.openCount).toBe(1);
+	});
+
+	it("shows and hides resolved comments, and says so when there are none", async () => {
+		expect(session.resolvedCount).toBe(1);
+		expect(session.resolvedVisible).toBe(false);
+
+		session.toggleResolved();
+		expect(rail.resolvedVisible).toBe(true);
+		expect(session.resolvedVisible).toBe(true);
+		expect(changed).toBe(1);
+
+		session.toggleResolved();
+		expect(rail.resolvedVisible).toBe(false);
+
+		// Reopen the only resolved comment: showing nothing is not a toggle.
+		await session.setStatus("b", "open");
+		const before = changed;
+		session.toggleResolved();
+		expect(rail.resolvedVisible).toBe(false);
+		expect(notices).toEqual(["No resolved comments on this file."]);
+		expect(changed).toBe(before);
 	});
 
 	it("opens a draft level with the selection", () => {

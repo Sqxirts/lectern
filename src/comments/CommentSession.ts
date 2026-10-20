@@ -49,6 +49,9 @@ export interface CommentRailLike {
 	layout(): void;
 	onScroll(): void;
 	focus(id: string): void;
+	/** Show or hide resolved comments in this view only. */
+	setShowResolved(value: boolean): void;
+	readonly resolvedVisible: boolean;
 	destroy(): void;
 }
 
@@ -98,6 +101,29 @@ export class CommentSession<F = unknown> implements RailDelegate {
 
 	get total(): number {
 		return this.store.comments.length;
+	}
+
+	get resolvedCount(): number {
+		return this.store.comments.filter((c) => c.status === "resolved").length;
+	}
+
+	get resolvedVisible(): boolean {
+		return this.rail?.resolvedVisible ?? false;
+	}
+
+	/**
+	 * Show or hide resolved comments for this file. Without this, a resolved
+	 * comment left the margin with no way back short of the settings tab and a
+	 * reopen. Showing them is also how a resolved comment gets reopened.
+	 */
+	toggleResolved(): void {
+		if (!this.rail) return;
+		if (!this.rail.resolvedVisible && this.resolvedCount === 0) {
+			this.services.notify("No resolved comments on this file.");
+			return;
+		}
+		this.rail.setShowResolved(!this.rail.resolvedVisible);
+		this.host.changed();
 	}
 
 	/** Re-resolve every anchor against the current DOM and redraw the rail. */

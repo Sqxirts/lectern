@@ -146,6 +146,18 @@ export class PdfCommentController {
 		await this.session?.openSidecar();
 	}
 
+	toggleResolved(): void {
+		this.session?.toggleResolved();
+	}
+
+	get resolvedCount(): number {
+		return this.session?.resolvedCount ?? 0;
+	}
+
+	get resolvedVisible(): boolean {
+		return this.session?.resolvedVisible ?? false;
+	}
+
 	async reloadComments(): Promise<void> {
 		await this.session?.reload();
 	}

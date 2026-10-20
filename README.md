@@ -58,7 +58,8 @@ Without `LECTERN_OUT` the build goes to `./dist`.
 | Comment on a PDF selection | Right-click → **Highlight and comment**, or the same command |
 | Copy one slide / the whole deck | **Copy slide** / **Copy all** in the toolbar |
 | Zoom / pan | `Ctrl+scroll` or the toolbar; middle-drag to pan |
-| Hide a finished comment | **Resolve** on the card |
+| Hide a finished comment | **Resolve** on the card. It stays in the sidecar note |
+| See or reopen resolved comments | **Show resolved** in the toolbar; in a PDF, right-click the page. Or the **Show or hide resolved comments** command |
 | Edit a text or code file | **Edit**, then **Save** in the toolbar |
 
 Settings cover the comment folder, default zoom, speaker notes, showing resolved comments, PDF comments on or off, and per-file-type toggles for when another plugin already handles a format.

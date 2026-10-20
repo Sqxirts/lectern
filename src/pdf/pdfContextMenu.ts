@@ -47,6 +47,18 @@ function addHighlightItem(menu: Menu, evt: MouseEvent, findController: (target: 
 	const controller = findController(target);
 	if (!controller) return;
 
+	// PDF tabs use Obsidian's toolbar, not ours, so this menu is where the
+	// resolved-comments toggle lives for a mouse user (plus the command).
+	const showing = controller.resolvedVisible;
+	if (showing || controller.resolvedCount > 0) {
+		menu.addItem((item) =>
+			item
+				.setTitle(showing ? "Hide resolved comments" : `Show resolved comments (${controller.resolvedCount})`)
+				.setIcon(showing ? "eye-off" : "eye")
+				.onClick(() => controller.toggleResolved()),
+		);
+	}
+
 	const selection = target.ownerDocument.getSelection();
 	if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
 
