@@ -24,12 +24,12 @@ function applyRunStyle(el: HTMLElement, s: RunStyle): void {
 	if (s.strike) lines.push("line-through");
 	if (lines.length) {
 		el.style.textDecorationLine = lines.join(" ");
-		if (s.underline === "double") el.style.textDecorationStyle = "double";
+		if (s.underline === "double") el.classList.add("lectern-u-double");
 	}
 
 	if (s.letterSpacingPt) el.style.letterSpacing = `${s.letterSpacingPt}pt`;
-	if (s.caps === "all") el.style.textTransform = "uppercase";
-	if (s.caps === "small") el.style.fontVariant = "small-caps";
+	if (s.caps === "all") el.classList.add("lectern-caps");
+	if (s.caps === "small") el.classList.add("lectern-small-caps");
 	if (s.highlight) el.style.backgroundColor = s.highlight;
 
 	if (s.baseline) {
@@ -90,18 +90,13 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 		const b = document.createElement("span");
 		b.className = "lectern-bullet";
 		b.textContent = p.bullet.text;
-		b.style.display = "inline-block";
-		b.style.textIndent = "0";
 		// A hanging indent reserves the bullet's column; without one, a small gap.
 		if (p.indentPx < 0) b.style.minWidth = `${-p.indentPx}px`;
-		else b.style.paddingRight = "0.4em";
+		else b.classList.add("has-gap");
 		if (p.bullet.fontFamily) b.style.fontFamily = p.bullet.fontFamily;
 		if (p.bullet.color) b.style.color = p.bullet.color;
 		if (p.bullet.sizePt) b.style.fontSize = `${p.bullet.sizePt}pt`;
-		// An inline-block sits on its own baseline; with a smaller bullet font
-		// that pushes the line box past an exact line height (a 30pt line drew
-		// 36pt on CYBR 310 week 1). Zero line height keeps it out of the sum.
-		b.style.lineHeight = "0";
+		// .lectern-bullet in styles.css zeroes the bullet's line height, see there.
 		el.appendChild(b);
 	}
 

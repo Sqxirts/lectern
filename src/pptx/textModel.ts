@@ -742,10 +742,7 @@ function shapeInheritance(shape: Element, scope: Scope, level: "slide" | "layout
 	const fontRefEl = child(child(shape, "style"), "fontRef");
 	const fontRef = fontRefEl
 		? {
-				font: (fontRefEl.getAttribute("idx") === "major" ? "major" : fontRefEl.getAttribute("idx") === "minor" ? "minor" : undefined) as
-					| "major"
-					| "minor"
-					| undefined,
+				font: fontRefEl.getAttribute("idx") === "major" ? ("major" as const) : fontRefEl.getAttribute("idx") === "minor" ? ("minor" as const) : undefined,
 				color: resolveColorIn(fontRefEl, scope.colors),
 			}
 		: undefined;

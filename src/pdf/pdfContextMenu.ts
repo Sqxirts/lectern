@@ -16,6 +16,7 @@ import type { PdfCommentController } from "./PdfCommentController";
  */
 export function patchPdfContextMenu(findController: (target: Element) => PdfCommentController | null): () => void {
 	const proto = Menu.prototype;
+	// eslint-disable-next-line @typescript-eslint/unbound-method -- only ever invoked as original.call(this, evt)
 	const original = proto.showAtMouseEvent;
 	let active = true;
 

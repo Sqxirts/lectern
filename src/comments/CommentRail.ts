@@ -79,10 +79,10 @@ export class CommentRail {
 		if (beside) {
 			this.railEl = beside.strip.createDiv({ cls: "lectern-rail is-beside" });
 			// createSvg adds `cls` as one classList token, so a space-separated string throws; pass an array.
-			this.connectorEl = beside.overlay.createSvg("svg", { cls: ["lectern-connectors", "is-beside"] }) as SVGSVGElement;
+			this.connectorEl = beside.overlay.createSvg("svg", { cls: ["lectern-connectors", "is-beside"] });
 		} else {
 			this.railEl = wrapper.createDiv({ cls: "lectern-rail" });
-			this.connectorEl = wrapper.createSvg("svg", { cls: "lectern-connectors" }) as SVGSVGElement;
+			this.connectorEl = wrapper.createSvg("svg", { cls: "lectern-connectors" });
 		}
 
 		// Clicking a highlight brings its card forward.
@@ -122,7 +122,7 @@ export class CommentRail {
 		const save = actions.createEl("button", { text: "Save", cls: "mod-cta" });
 		const cancel = actions.createEl("button", { text: "Cancel" });
 
-		save.addEventListener("click", async () => {
+		const onSave = async (): Promise<void> => {
 			const body = input.value.trim();
 			if (!body) {
 				input.focus();
@@ -136,7 +136,8 @@ export class CommentRail {
 			} finally {
 				save.disabled = false;
 			}
-		});
+		};
+		save.addEventListener("click", () => void onSave());
 
 		cancel.addEventListener("click", () => {
 			this.delegate.cancelDraft();
@@ -256,13 +257,13 @@ export class CommentRail {
 		const resolve = actions.createEl("button", {
 			text: comment.status === "resolved" ? "Reopen" : "Resolve",
 		});
-		resolve.addEventListener("click", async () => {
-			await this.delegate.setStatus(comment.id, comment.status === "resolved" ? "open" : "resolved");
+		resolve.addEventListener("click", () => {
+			void this.delegate.setStatus(comment.id, comment.status === "resolved" ? "open" : "resolved");
 		});
 
 		const remove = actions.createEl("button", { cls: "mod-warning", text: "Delete" });
-		remove.addEventListener("click", async () => {
-			await this.delegate.deleteComment(comment.id);
+		remove.addEventListener("click", () => {
+			void this.delegate.deleteComment(comment.id);
 		});
 
 		card.addEventListener("click", (event) => {
@@ -282,7 +283,7 @@ export class CommentRail {
 			await this.delegate.saveBody(comment.id, input.value.trim());
 		};
 
-		input.addEventListener("blur", commit);
+		input.addEventListener("blur", () => void commit());
 		input.addEventListener("keydown", (event) => {
 			if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
 				event.preventDefault();

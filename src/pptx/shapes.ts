@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import { slidePathsInOrder } from "./extract";
 import { resolveColorIn, type ColorContext } from "./color";
-import { NS_P, child, loadSlideParts, parseXml } from "./parts";
+import { NS_P, child, loadSlideParts } from "./parts";
 
 /**
  * Shapes the renderer cannot draw, redrawn as SVG from the XML.

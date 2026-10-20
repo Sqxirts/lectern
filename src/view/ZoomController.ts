@@ -146,7 +146,6 @@ export class ZoomController {
 	}
 
 	private apply(): void {
-		this.content.style.transformOrigin = "0 0";
 		this.content.style.transform = `scale(${this.level})`;
 		if (this.natural.width > 0) {
 			this.sizer.style.width = `${this.natural.width * this.level}px`;

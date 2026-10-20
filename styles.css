@@ -441,6 +441,33 @@
 	font-variant-numeric: tabular-nums;
 }
 
+.lectern-bullet {
+	display: inline-block;
+	text-indent: 0;
+	/*
+	 * An inline-block sits on its own baseline; with a smaller bullet font that
+	 * pushes the line box past an exact line height (a 30pt line drew 36pt on
+	 * CYBR 310 week 1). Zero line height keeps it out of the sum.
+	 */
+	line-height: 0;
+}
+
+.lectern-bullet.has-gap {
+	padding-right: 0.4em;
+}
+
+.lectern-u-double {
+	text-decoration-style: double;
+}
+
+.lectern-caps {
+	text-transform: uppercase;
+}
+
+.lectern-small-caps {
+	font-variant: small-caps;
+}
+
 .lectern-slide {
 	position: relative;
 	background: #ffffff;

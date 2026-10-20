@@ -1,9 +1,9 @@
 {
 	"id": "lectern",
 	"name": "Lectern",
-	"version": "0.3.0",
-	"minAppVersion": "1.5.0",
-	"description": "Preview docx/xlsx/pptx and 130+ code files. Selectable pptx text, zoom, edit and save, and Word-style margin comments stored as markdown in your vault, on PDFs too.",
+	"version": "1.0.0",
+	"minAppVersion": "1.14.0",
+	"description": "Preview Word, Excel, PowerPoint and 130+ code files with selectable slide text, and add Word-style margin comments to them and to PDFs, saved as Markdown in your vault.",
 	"author": "sqxirts",
-	"isDesktopOnly": false
+	"isDesktopOnly": true
 }
