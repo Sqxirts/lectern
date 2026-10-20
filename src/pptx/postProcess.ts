@@ -5,6 +5,7 @@ import { applyTextBoxes, applyCellText } from "./textApply";
 import { readShapeArt, applyShapeArt, type ShapeArtModel } from "./shapes";
 import { readTableCellStyles, applyTableCellStyles, type StyledTable } from "./tableStyleEngine";
 import { readPictureEffects, applyPictureEffects, type PictureEffect } from "./pictures";
+import { relaxTextOverflow } from "./overflow";
 
 /**
  * Everything read from the deck's XML to correct what the renderer emits.
@@ -55,4 +56,6 @@ export function fixSlide(stage: HTMLElement, data: SlideFixData, index: number):
 	// The renderer invents a blue header and banded rows for a table whose
 	// style the deck never defined. PowerPoint draws those plain.
 	markUnstyledTables(stage, data.styled[index] ?? []);
+	// Last, so it sees every inline overflow the passes above left behind.
+	relaxTextOverflow(stage);
 }

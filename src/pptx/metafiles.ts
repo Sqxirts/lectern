@@ -1,3 +1,4 @@
+import { relaxOverflowAbove } from "./overflow";
 /**
  * PowerPoint stores vector art, and anything pasted from Visio or Word, as a
  * Windows metafile: EMF or the older WMF. Browsers cannot decode either one.
@@ -54,10 +55,20 @@ export function dataUrlBytes(src: string): Uint8Array | null {
  * window instead. Returns null in a plain browser, in vitest's jsdom, and
  * anywhere Obsidian has node access switched off.
  */
-function nodeRequire(): ((id: string) => any) | null {
+function nodeRequire(): NodeRequireFn | null {
 	const candidate = (window as unknown as Record<string, unknown>).require;
-	return typeof candidate === "function" ? (candidate as (id: string) => any) : null;
+	return typeof candidate === "function" ? (candidate as NodeRequireFn) : null;
 }
+
+/** The Node builtins this file loads, typed. Type-only imports: nothing is bundled. */
+interface NodeBuiltins {
+	"fs/promises": typeof import("fs/promises");
+	os: typeof import("os");
+	path: typeof import("path");
+	child_process: typeof import("child_process");
+	util: typeof import("util");
+}
+type NodeRequireFn = <K extends keyof NodeBuiltins>(id: K) => NodeBuiltins[K];
 
 /**
  * Rasterise a metafile to a PNG data URL using GDI+ through PowerShell.
@@ -85,18 +96,17 @@ export async function metafileToPngDataUrl(bytes: Uint8Array): Promise<string | 
 		if (!req) return null;
 
 		const fs = req("fs/promises");
-		const { tmpdir } = req("os");
-		const { join } = req("path");
-		const { execFile } = req("child_process");
-		const { promisify } = req("util");
-		const run = promisify(execFile);
-		const { writeFile, readFile, mkdtemp } = fs;
-		rm = fs.rm;
+		const os = req("os");
+		const path = req("path");
+		const childProcess = req("child_process");
+		const util = req("util");
+		const run = util.promisify(childProcess.execFile);
+		rm = (target, options) => fs.rm(target, options);
 
-		dir = await mkdtemp(join(tmpdir(), "lectern-emf-"));
-		const src = join(dir, "in.bin");
-		const dst = join(dir, "out.png");
-		await writeFile(src, bytes);
+		dir = await fs.mkdtemp(path.join(os.tmpdir(), "lectern-emf-"));
+		const src = path.join(dir, "in.bin");
+		const dst = path.join(dir, "out.png");
+		await fs.writeFile(src, bytes);
 
 		// -File would need a script on disk; -Command keeps it to one process.
 		// Paths are ours and live under the OS temp dir, so no quoting surprises.
@@ -117,7 +127,7 @@ export async function metafileToPngDataUrl(bytes: Uint8Array): Promise<string | 
 			windowsHide: true,
 		});
 
-		const png = await readFile(dst);
+		const png = await fs.readFile(dst);
 		return `data:image/png;base64,${png.toString("base64")}`;
 	} catch (error) {
 		console.warn("[lectern] metafile conversion failed", error);
@@ -171,11 +181,11 @@ export async function repairMetafileImages(root: HTMLElement): Promise<number> {
 			}
 
 			// Nothing to show, so say what it is instead of leaving a broken icon.
-			const note = img.ownerDocument.createElement("span");
-			note.className = "lectern-metafile-missing";
-			note.textContent = `${kind.toUpperCase()} vector image`;
+			const note = createSpan({ cls: "lectern-metafile-missing", text: `${kind.toUpperCase()} vector image` });
 			note.title = `This slide uses a Windows ${kind.toUpperCase()} metafile, which browsers cannot display.`;
+			const slide = img.closest<HTMLElement>(".lectern-slide");
 			img.replaceWith(note);
+			relaxOverflowAbove(note, slide);
 		})
 	);
 

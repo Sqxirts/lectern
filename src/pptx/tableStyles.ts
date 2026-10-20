@@ -169,6 +169,11 @@ export function markUnstyledTables(slide: HTMLElement, resolved: boolean[]): num
 	for (let t = 0; t < Math.min(tables.length, resolved.length); t++) {
 		if (resolved[t]) continue;
 		tables[t].classList.add(UNSTYLED_TABLE_CLASS);
+		// The renderer's invented header and banding fills are inline. A cell
+		// with its own fill in the deck carries FILLED_CELL_CLASS and keeps it.
+		for (const td of Array.from(tables[t].querySelectorAll<HTMLTableCellElement>("td"))) {
+			if (!td.classList.contains(FILLED_CELL_CLASS)) td.style.removeProperty("background-color");
+		}
 		marked++;
 	}
 

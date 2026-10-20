@@ -80,6 +80,16 @@ const context = await esbuild.context({
 		"@lezer/lr",
 		...builtins,
 	],
+	// JSZip's prebuilt browser file (its package "browser" field) inlines old
+	// polyfills that inject <script> elements and call new Function(), which the
+	// community directory scan flags. Bundle its source instead, with those
+	// polyfills swapped for native equivalents. See shims/.
+	alias: {
+		jszip: join(here, "node_modules", "jszip", "lib", "index.js"),
+		lie: join(here, "shims", "lie.cjs"),
+		setimmediate: join(here, "shims", "setimmediate.cjs"),
+		"readable-stream": join(here, "shims", "readable-stream.cjs"),
+	},
 	format: "cjs",
 	target: "es2022",
 	logLevel: "info",

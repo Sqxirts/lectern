@@ -20,7 +20,8 @@ const STYLES = readFileSync(join(__dirname, "..", "styles.css"), "utf-8");
 // invariant check fails, because jsdom swaps in its own Uint8Array.
 const LAYOUT_PASSES = execFileSync("npx", ["esbuild", "--bundle", "--format=iife", "--loader=ts"], {
 	cwd: join(__dirname, ".."),
-	input: `import { repairCollapsedShapes } from "./src/pptx/thinShapes";
+	input: `import "./tests/helpers/domShim";
+		import { repairCollapsedShapes } from "./src/pptx/thinShapes";
 		import { applyTabStops } from "./src/pptx/tabStops";
 		const slide = document.querySelector(".lectern-slide");
 		repairCollapsedShapes(slide);

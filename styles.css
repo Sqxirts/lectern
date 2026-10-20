@@ -175,15 +175,18 @@
 /* ---------- code ---------- */
 
 .lectern-code {
-	display: grid;
-	grid-template-columns: max-content 1fr;
 	font-family: var(--font-monospace);
 	font-size: 13px;
 	line-height: 1.6;
 }
 
+/*
+ * One grid per row. The gutter is sized from the longest line number
+ * (--lectern-code-digits, set by CodeRenderer) so every row's columns line up.
+ */
 .lectern-code-row {
-	display: contents;
+	display: grid;
+	grid-template-columns: calc(var(--lectern-code-digits, 3) * 1ch + 14px) 1fr;
 }
 
 .lectern-code-ln {
@@ -359,11 +362,6 @@
 	align-items: center;
 }
 
-.lectern-docx-body {
-	background: transparent !important;
-	padding: 0 !important;
-}
-
 /* ---------- xlsx ---------- */
 
 .lectern-xlsx-tabs {
@@ -443,7 +441,6 @@
 
 .lectern-bullet {
 	display: inline-block;
-	text-indent: 0;
 	/*
 	 * An inline-block sits on its own baseline; with a smaller bullet font that
 	 * pushes the line box past an exact line height (a 30pt line drew 36pt on
@@ -460,15 +457,19 @@
 	display: inline-block;
 	width: 0;
 	height: 1px;
-	overflow: hidden;
+}
+
+/*
+ * Browsers clip an inline <svg> to its box by default. Shape outlines and
+ * connectors are drawn right on that edge, so let them spill; relaxTextOverflow
+ * (pptx/overflow.ts) clears the renderer's inline overflow on everything else.
+ */
+.lectern-slide svg {
+	overflow: visible;
 }
 
 .lectern-transformed {
 	transform-origin: center;
-}
-
-.lectern-u-double {
-	text-decoration-style: double;
 }
 
 .lectern-caps {
@@ -664,11 +665,16 @@ td.lectern-highlight {
 
 /* ---------- settings ---------- */
 
+.lectern-ext-setting {
+	flex-wrap: wrap;
+}
+
 .lectern-ext-grid {
 	display: flex;
 	flex-wrap: wrap;
+	flex-basis: 100%;
 	gap: 6px;
-	margin: 4px 0 18px;
+	margin: 8px 0 4px;
 }
 
 .lectern-ext-chip {
@@ -724,25 +730,6 @@ td.lectern-highlight {
 }
 
 /*
- * The pptx renderer puts overflow:hidden on every text box, but lays those
- * boxes out a few pixels tighter than its own line boxes need, so descenders
- * get shaved and an extra wrapped line disappears entirely.
- *
- * It also uses overflow:hidden for something else entirely: a PowerPoint
- * picture crop (<a:srcRect>) becomes a box of the cropped size wrapping an
- * oversized <img> at a negative offset. Relaxing overflow on those uncrops
- * every image in the deck, which on CYBR 226 week 3 slide 11 spilled a stock
- * photo's watermark over the shape next to it and left the wall plate the
- * wrong shape.
- *
- * So relax it only on elements that hold no image. :has() makes that a
- * one-selector distinction. !important because the renderer sets these inline.
- */
-.lectern-slide *:not(:has(img)) {
-	overflow: visible !important;
-}
-
-/*
  * Obsidian and most themes set `img { max-width: 100% }` for note content.
  * Inside a slide that is actively wrong: the renderer crops a picture by
  * wrapping an oversized <img> in a box of the cropped size and offsetting it,
@@ -754,10 +741,13 @@ td.lectern-highlight {
  *
  * Only the two images wider than their wrapper were affected, which is why
  * this looked like one arbitrary broken image rather than a systematic fault.
+ *
+ * The container in the selector is for specificity: it outranks the global
+ * and theme rules without !important.
  */
-.lectern-slide img {
-	max-width: none !important;
-	max-height: none !important;
+.lectern-container .lectern-slide img {
+	max-width: none;
+	max-height: none;
 }
 
 /*
@@ -770,13 +760,13 @@ td.lectern-highlight {
  *
  * The renderer instead paints the header row #4F81BD and bands the body, then
  * leaves the header text black on top of it. Put it back to the grid the deck
- * asked for. !important because those fills are inline.
+ * asked for. markUnstyledTables() removes those inline fills.
  *
  * A cell with its own <a:solidFill> in <a:tcPr> is spared: that colour came
  * from the deck, not the renderer (week 5 slide 11's navy header row).
  */
 .lectern-slide table.lectern-table-unstyled td:not(.lectern-cell-filled) {
-	background-color: transparent !important;
+	background-color: transparent;
 	border: 1px solid #9a9a9a;
 }
 
