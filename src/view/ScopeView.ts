@@ -29,6 +29,13 @@ export class ScopeView extends FileView {
 
 	private scrollHandler: (() => void) | null = null;
 	private resizeObserver: ResizeObserver | null = null;
+	/**
+	 * Bumped on every teardown. onLoadFile awaits the render and the sidecar;
+	 * if the user switched files meanwhile, the rest of that load must not run,
+	 * or it wires the old file's comments onto the new file's DOM and new
+	 * comments save to the wrong sidecar.
+	 */
+	private loadGen = 0;
 
 	constructor(leaf: WorkspaceLeaf, settings: ScopeSettings) {
 		super(leaf);
@@ -49,6 +56,8 @@ export class ScopeView extends FileView {
 
 	async onLoadFile(file: TFile): Promise<void> {
 		this.buildChrome();
+		const gen = this.loadGen;
+		const stale = () => gen !== this.loadGen;
 
 		const kind = classify(file.extension);
 		if (kind === "unsupported") {
@@ -72,12 +81,15 @@ export class ScopeView extends FileView {
 		try {
 			await this.renderer.render();
 		} catch (error) {
+			// A torn-down renderer may reject; that error belongs to the old file.
+			if (stale()) return;
 			const message = error instanceof Error ? error.message : String(error);
 			this.content.empty();
 			this.content.createDiv({ cls: "vault-scope-error", text: `Could not open this file: ${message}` });
 			console.error("[vault-scope] render failed", error);
 			return;
 		}
+		if (stale() || !this.renderer) return;
 
 		const extra = this.renderer.wrapperClass();
 		if (extra) this.wrapper.addClass(extra);
@@ -85,6 +97,7 @@ export class ScopeView extends FileView {
 		this.zoom?.set(this.settings.defaultZoomPercent / 100);
 		// Let the browser finish laying the content out before measuring it.
 		window.setTimeout(() => {
+			if (stale()) return;
 			this.zoom?.measure();
 			// A slide is as wide as the deck says it is, which is routinely
 			// wider than the pane once the comment rail has taken its share.
@@ -96,7 +109,7 @@ export class ScopeView extends FileView {
 			}
 		}, 0);
 
-		this.comments = new CommentSession<TFile>(
+		const session = new CommentSession<TFile>(
 			this.commentHost(),
 			new CommentStore(this.app, file, this.settings.sidecarFolder),
 			(delegate) => new CommentRail(this.wrapper, this.content, delegate, this.settings.showResolvedByDefault),
@@ -108,10 +121,14 @@ export class ScopeView extends FileView {
 				getSelection: () => window.getSelection(),
 			},
 		);
-		await this.comments.start();
+		this.comments = session;
+		await session.start();
+		// teardown() destroyed this session if another file opened meanwhile.
+		if (stale()) return;
 		// The rail only takes its strip once it has comments to show, which is
 		// after the first fit check ran. Shrink again if it now covers the page.
 		window.setTimeout(() => {
+			if (stale()) return;
 			if (this.zoom?.overflowsWidth) this.zoom.fitToWidth();
 		}, 0);
 		this.refreshToolbar();
@@ -128,6 +145,7 @@ export class ScopeView extends FileView {
 	}
 
 	private teardown(): void {
+		this.loadGen++;
 		this.renderer?.destroy();
 		this.renderer = null;
 		this.zoom?.destroy();
@@ -175,6 +193,9 @@ export class ScopeView extends FileView {
 			this.comments?.layout();
 		});
 		this.resizeObserver.observe(this.content);
+		// Dragging the pane narrower leaves the content's size alone, so watch
+		// the pane too, or cards and connectors stay where the old width put them.
+		this.resizeObserver.observe(this.wrapper);
 	}
 
 	// ----- comments -------------------------------------------------------

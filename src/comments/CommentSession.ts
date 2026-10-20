@@ -68,6 +68,7 @@ export class CommentSession<F = unknown> implements RailDelegate {
 
 	private rail: CommentRailLike | null = null;
 	private draftAnchor: Anchor | null = null;
+	private destroyed = false;
 
 	constructor(
 		host: CommentHost,
@@ -84,6 +85,9 @@ export class CommentSession<F = unknown> implements RailDelegate {
 	/** Read the sidecar, build the rail, and place what was there. */
 	async start(): Promise<void> {
 		await this.store.load();
+		// Torn down while the sidecar was loading (the user switched files):
+		// building a rail now would attach it to whatever the view shows next.
+		if (this.destroyed) return;
 		this.rail = this.makeRail(this);
 		this.place();
 	}
@@ -148,17 +152,29 @@ export class CommentSession<F = unknown> implements RailDelegate {
 	}
 
 	async commitDraft(body: string): Promise<void> {
-		if (!this.draftAnchor) return;
-
-		await this.store.add({
-			id: newCommentId(),
-			anchor: this.draftAnchor,
-			status: "open",
-			created: nowStamp(),
-			body,
-		});
-
+		// Take the anchor before the write, not after: a second Save or
+		// Ctrl+Enter during a slow write found it still set and added the
+		// comment twice.
+		const anchor = this.draftAnchor;
+		if (!anchor) return;
 		this.draftAnchor = null;
+
+		try {
+			await this.store.add({
+				id: newCommentId(),
+				anchor,
+				status: "open",
+				created: nowStamp(),
+				body,
+			});
+		} catch (error) {
+			// Leave the draft open so the text isn't lost, and let Save retry.
+			if (!this.destroyed) this.draftAnchor = anchor;
+			this.services.notify("Could not save the comment. Try again.");
+			console.error("[vault-scope] comment save failed", error);
+			return;
+		}
+
 		this.rail?.closeDraft();
 		this.services.getSelection()?.removeAllRanges();
 		this.place();
@@ -206,6 +222,7 @@ export class CommentSession<F = unknown> implements RailDelegate {
 	}
 
 	destroy(): void {
+		this.destroyed = true;
 		this.rail?.destroy();
 		this.rail = null;
 		this.draftAnchor = null;

@@ -6,6 +6,11 @@ const MIN_CARD_HEIGHT = 64;
 /** Kept in step with --vault-scope-rail-width in styles.css. */
 const RAIL_WIDTH = 260;
 const RAIL_MARGIN = 12;
+/** .vault-scope-wrapper padding, and the padding-right `.has-rail` swaps in for it. */
+const WRAPPER_PADDING = 16;
+const STRIP_WIDTH = RAIL_WIDTH + 32;
+/** Wrapper classes whose content is centred by auto margins in styles.css. */
+const CENTRED_CLASSES = ["vault-scope-pptx-active", "vault-scope-docx-active"];
 
 export interface RailDelegate {
 	saveBody(id: string, body: string): Promise<void>;
@@ -123,7 +128,14 @@ export class CommentRail {
 				input.focus();
 				return;
 			}
-			await this.delegate.commitDraft(body);
+			// Disabled until the write lands; Ctrl+Enter goes through save.click(),
+			// which a disabled button ignores, so it is covered too.
+			save.disabled = true;
+			try {
+				await this.delegate.commitDraft(body);
+			} finally {
+				save.disabled = false;
+			}
 		});
 
 		cancel.addEventListener("click", () => {
@@ -162,13 +174,39 @@ export class CommentRail {
 	private reserveSpace(): void {
 		const wanted = this.visible().length > 0 || this.draftEl !== null;
 		if (!this.beside) {
-			this.wrapper.toggleClass("has-rail", wanted);
+			this.wrapper.toggleClass("has-rail", wanted && this.needsStrip());
 			return;
 		}
 		if (wanted !== this.reserved) {
 			this.reserved = wanted;
 			this.beside.onReserve(wanted);
 		}
+	}
+
+	/**
+	 * Whether centred slides or pages must shift left to keep the cards off them.
+	 *
+	 * Reserving the strip always pushed the slides left of centre even when the
+	 * margins around a centred slide already had room for the cards. Now:
+	 * - the right margin of a centred slide fits the rail: no strip, stay centred;
+	 * - it doesn't, but slide + strip fit side by side: reserve, the slide centres
+	 *   in what is left;
+	 * - not even that: no strip, stay centred, and the cards sit over the slide's
+	 *   right edge, which a strip could not have avoided anyway.
+	 * Content that is not centred (code) keeps the strip whenever there are cards.
+	 * Every input here ignores `has-rail` itself (clientWidth includes padding),
+	 * so toggling the class cannot feed back into the decision.
+	 */
+	private needsStrip(): boolean {
+		const sizer = this.content.parentElement;
+		const centred = CENTRED_CLASSES.some((c) => this.wrapper.hasClass(c));
+		if (!sizer || !centred) return true;
+
+		const pane = this.wrapper.clientWidth - 2 * WRAPPER_PADDING;
+		const page = sizer.offsetWidth;
+		const sideMargin = (pane - page) / 2;
+		if (sideMargin >= RAIL_WIDTH + RAIL_MARGIN * 2 - WRAPPER_PADDING) return false;
+		return pane - page >= STRIP_WIDTH - WRAPPER_PADDING;
 	}
 
 	private visible(): PlacedComment[] {
@@ -312,6 +350,8 @@ export class CommentRail {
 	}
 
 	layout(): void {
+		// Pane width and zoom both change whether the strip is needed.
+		if (!this.beside) this.reserveSpace();
 		const wrapperBox = this.wrapper.getBoundingClientRect();
 		const scrollTop = this.wrapper.scrollTop;
 
@@ -351,8 +391,15 @@ export class CommentRail {
 			this.drawConnectorsBeside();
 			return;
 		}
+		// Both ends in the wrapper's scroll coordinates, which is where the SVG sits.
+		// The card end used to be card.offsetLeft/offsetTop, but a card's offset
+		// parent is the rail, so x came out near 0 and every line ran to the
+		// left edge of the pane instead of to its card.
 		const wrapperBox = this.wrapper.getBoundingClientRect();
-		const scrollTop = this.wrapper.scrollTop;
+		const toLocal = (x: number, y: number) => ({
+			x: x - wrapperBox.left + this.wrapper.scrollLeft,
+			y: y - wrapperBox.top + this.wrapper.scrollTop,
+		});
 
 		this.connectorEl.empty();
 		this.connectorEl.setAttribute("width", String(this.wrapper.scrollWidth));
@@ -363,17 +410,33 @@ export class CommentRail {
 			const target = placed.elements[0];
 			if (!card || !target) continue;
 
-			const targetBox = target.getBoundingClientRect();
-			const fromX = targetBox.right - wrapperBox.left;
-			const fromY = targetBox.top - wrapperBox.top + scrollTop + targetBox.height / 2;
-			const toX = card.offsetLeft;
-			const toY = card.offsetTop + 14;
+			const t = target.getBoundingClientRect();
+			const midY = t.top + t.height / 2;
+			// Where the card is going, not where it is: `top` animates (0.15s), so
+			// its live box during a relayout is the old spot, and nothing redraws
+			// when the transition ends.
+			const cardLeft = this.railEl.offsetLeft + card.offsetLeft;
+			const cardTop = this.railEl.offsetTop + parseFloat(card.style.top || "0") + 14;
+			const hl = { left: toLocal(t.left, midY), right: toLocal(t.right, midY) };
+			let from, to;
+			if (cardLeft >= hl.right.x) {
+				from = hl.right;
+				to = { x: cardLeft, y: cardTop };
+			} else if (cardLeft + card.offsetWidth <= hl.left.x) {
+				// Card left of the highlight: join the near edges, still pointing at the card.
+				from = hl.left;
+				to = { x: cardLeft + card.offsetWidth, y: cardTop };
+			} else {
+				// The card sits over the highlight (narrow pane); a line would only
+				// cross the card. Clicking either one still flashes the other.
+				continue;
+			}
 
 			const line = this.connectorEl.createSvg("path");
 			line.classList.add("vault-scope-connector");
 			// A shallow S-curve reads as a link without drawing attention to itself.
-			const midX = fromX + (toX - fromX) / 2;
-			line.setAttribute("d", `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`);
+			const midX = from.x + (to.x - from.x) / 2;
+			line.setAttribute("d", `M ${from.x} ${from.y} C ${midX} ${from.y}, ${midX} ${to.y}, ${to.x} ${to.y}`);
 			if (placed.comment.id === this.focusedId) line.classList.add("is-focused");
 		}
 	}
