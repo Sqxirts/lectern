@@ -51,11 +51,11 @@ export function dataUrlBytes(src: string): Uint8Array | null {
  * Node's `require`, if this really is Electron with node integration on.
  *
  * esbuild rewrites a literal top-level `require` call, so it is reached through
- * globalThis instead. Returns null in a plain browser, in vitest's jsdom, and
+ * window instead. Returns null in a plain browser, in vitest's jsdom, and
  * anywhere Obsidian has node access switched off.
  */
 function nodeRequire(): ((id: string) => any) | null {
-	const candidate = (globalThis as Record<string, unknown>).require;
+	const candidate = (window as unknown as Record<string, unknown>).require;
 	return typeof candidate === "function" ? (candidate as (id: string) => any) : null;
 }
 
@@ -137,7 +137,6 @@ export async function metafileToPngDataUrl(bytes: Uint8Array): Promise<string | 
 export async function repairMetafileImages(root: HTMLElement): Promise<number> {
 	const images = [...root.querySelectorAll("img")];
 	const cache = new Map<string, Promise<string | null>>();
-	let found = 0;
 	let repaired = 0;
 
 	await Promise.all(
@@ -148,7 +147,6 @@ export async function repairMetafileImages(root: HTMLElement): Promise<number> {
 
 			const kind = detectMetafile(bytes);
 			if (!kind) return;
-			found++;
 
 			const key = src;
 			let pending = cache.get(key);
@@ -181,8 +179,5 @@ export async function repairMetafileImages(root: HTMLElement): Promise<number> {
 		})
 	);
 
-	if (found > 0) {
-		console.info(`[lectern] metafiles: ${found} found, ${repaired} converted`);
-	}
 	return repaired;
 }

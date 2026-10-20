@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting, normalizePath } from "obsidian";
 import type LecternPlugin from "./main";
 import { CODE_EXTENSIONS, CODE_EXTENSION_GROUPS, OFFICE_EXTENSIONS } from "./constants";
 
@@ -49,7 +49,7 @@ export class LecternSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Comments on PDFs")
-			.setDesc("Select text in Obsidian's PDF viewer and add a comment with the same hotkey. Stored in the same comment folder. The PDF itself is never changed.")
+			.setDesc("Select text in Obsidian's PDF viewer and add a comment with the same command. Stored in the same comment folder. The PDF itself is never changed.")
 			.addToggle((toggle) =>
 				toggle.setValue(this.plugin.settings.pdfComments).onChange(async (value) => {
 					this.plugin.settings.pdfComments = value;
@@ -60,13 +60,13 @@ export class LecternSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Comment folder")
-			.setDesc("Vault-relative folder for the markdown sidecar notes that hold your comments.")
+			.setDesc("Vault-relative folder for the Markdown sidecar notes that hold your comments.")
 			.addText((text) =>
 				text
 					.setPlaceholder("File-Notes")
 					.setValue(this.plugin.settings.sidecarFolder)
 					.onChange(async (value) => {
-						this.plugin.settings.sidecarFolder = value.replace(/^\/+|\/+$/g, "") || "File-Notes";
+						this.plugin.settings.sidecarFolder = normalizePath(value.trim() || "File-Notes");
 						await this.plugin.saveSettings();
 					})
 			);
@@ -78,7 +78,6 @@ export class LecternSettingTab extends PluginSettingTab {
 				slider
 					.setLimits(50, 200, 10)
 					.setValue(this.plugin.settings.defaultZoomPercent)
-					.setDynamicTooltip()
 					.onChange(async (value) => {
 						this.plugin.settings.defaultZoomPercent = value;
 						await this.plugin.saveSettings();
@@ -147,12 +146,12 @@ export class LecternSettingTab extends PluginSettingTab {
 			const box = label.createEl("input", { type: "checkbox" });
 			box.checked = registered.has(ext);
 			label.createSpan({ text: `.${ext}` });
-			box.addEventListener("change", async () => {
+			box.addEventListener("change", () => {
 				const next = new Set(this.plugin.settings.registeredExtensions);
 				if (box.checked) next.add(ext);
 				else next.delete(ext);
 				this.plugin.settings.registeredExtensions = [...next];
-				await this.plugin.saveSettings();
+				void this.plugin.saveSettings();
 			});
 		}
 	}

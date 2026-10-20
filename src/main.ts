@@ -35,14 +35,13 @@ export default class LecternPlugin extends Plugin {
 
 		this.addCommand({
 			id: "open-current-file",
-			name: "Open current file in Lectern",
+			name: "Open current file",
 			callback: () => void this.openActiveFile(),
 		});
 
 		this.addCommand({
 			id: "comment-on-selection",
 			name: "Comment on selection",
-			hotkeys: [{ modifiers: ["Ctrl", "Alt"], key: "m" }],
 			checkCallback: (checking) => {
 				const view = this.activeCommentTarget();
 				if (!view) return false;
@@ -83,19 +82,14 @@ export default class LecternPlugin extends Plugin {
 	 */
 	private registerFileExtensions(): void {
 		const wanted = new Set(this.settings.registeredExtensions);
-		const skipped: string[] = [];
 
 		for (const ext of ALL_EXTENSIONS) {
 			if (!wanted.has(ext) || NEVER_REGISTER.has(ext)) continue;
 			try {
 				this.registerExtensions([ext], VIEW_TYPE_LECTERN);
 			} catch {
-				skipped.push(ext);
+				// Another plugin owns this extension; leave it to them.
 			}
-		}
-
-		if (skipped.length > 0) {
-			console.info(`[lectern] another plugin already handles: ${skipped.join(", ")}`);
 		}
 	}
 
@@ -132,7 +126,7 @@ export default class LecternPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		const saved = await this.loadData();
+		const saved = (await this.loadData()) as Partial<LecternSettings> | null;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, saved);
 
 		const { changed } = migrateExtensions(this.settings, saved != null);

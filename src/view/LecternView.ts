@@ -257,7 +257,7 @@ export class LecternView extends FileView {
 		const commentGroup: ToolbarItem[] = [
 			{
 				id: "comment",
-				label: "Comment on the selected text (Ctrl+Alt+M)",
+				label: "Comment on the selected text",
 				text: "Comment",
 				onClick: () => this.startComment(),
 			},

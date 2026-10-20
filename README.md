@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/Sqxirts/lectern/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/Sqxirts/lectern?style=flat-square"></a>
-  <img alt="Obsidian 1.5+" src="https://img.shields.io/badge/obsidian-1.5%2B-7c3aed?style=flat-square">
+  <img alt="Obsidian 1.14+, desktop" src="https://img.shields.io/badge/obsidian-1.14%2B%20desktop-7c3aed?style=flat-square">
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/github/license/Sqxirts/lectern?style=flat-square"></a>
 </p>
 
@@ -19,7 +19,7 @@
 - **Opens Office and code files.** `.pptx`, `.docx`, `.xlsx`, `.xls`, and 130+ code and text formats, with syntax highlighting, zoom and pan.
 - **Slide text is real text.** Drag-select and `Ctrl+C` work on slides. Other preview plugins draw slides to a canvas, which is just pixels.
 - **Copies a deck out as markdown.** `Copy slide` grabs one slide; `Copy all` exports the whole deck with one heading per slide. Speaker notes show under each slide.
-- **Word-style margin comments.** Select text, press `Ctrl+Alt+M`, write a note. Cards sit in a right-hand margin with a line to the highlight.
+- **Word-style margin comments.** Select text, run **Comment on selection** (or your hotkey for it), write a note. Cards sit in a right-hand margin with a line to the highlight.
 - **Comments on PDFs too,** inside Obsidian's own PDF viewer. Right-click a selection and pick **Highlight and comment**. Page links, search and thumbnails keep working.
 - **Your files are never modified.** Comments go to a sidecar note in `File-Notes/`, so they show up in search, backlinks and sync like any other note.
 
@@ -32,6 +32,10 @@
 ```
 
 Then fully quit and reopen Obsidian, and enable **Lectern** under *Settings → Community plugins*. A plugin reload is not enough the first time, because Obsidian only registers new file types at startup.
+
+**Set a hotkey.** Lectern ships without one so it can't clash with yours. Go to *Settings → Hotkeys*, search "Lectern: Comment on selection", and bind it. `Ctrl+Alt+M` is the one the author uses, and the one Word uses for a new comment.
+
+Desktop only. Lectern needs Obsidian 1.14 or later on Windows, macOS or Linux.
 
 **From source.**
 
@@ -50,8 +54,8 @@ Without `LECTERN_OUT` the build goes to `./dist`.
 
 | To | Do |
 |---|---|
-| Comment on a selection | `Ctrl+Alt+M`, or the **Comment** toolbar button |
-| Comment on a PDF selection | Right-click → **Highlight and comment**, or `Ctrl+Alt+M` |
+| Comment on a selection | The **Comment** toolbar button, or the **Comment on selection** command |
+| Comment on a PDF selection | Right-click → **Highlight and comment**, or the same command |
 | Copy one slide / the whole deck | **Copy slide** / **Copy all** in the toolbar |
 | Zoom / pan | `Ctrl+scroll` or the toolbar; middle-drag to pan |
 | Hide a finished comment | **Resolve** on the card |
@@ -68,6 +72,10 @@ Likely midterm question. Compare with STRIDE in Reading 3.
 ```
 
 Each comment remembers the exact quote plus the text around it. If the file changes, Lectern finds the quote again; if it can't, the card is flagged **orphaned** instead of disappearing. Details in [docs/comments.md](docs/comments.md).
+
+## What it touches outside your vault
+
+On **Windows only**, slides that contain old Windows vector images (EMF/WMF), which browsers can't display, are converted to PNG through PowerShell and the built-in .NET imaging library. Each image is written to a temporary folder in your system temp directory (`lectern-emf-*`), converted, and the folder is deleted straight away. On macOS and Linux those images show a labelled placeholder instead. Nothing else leaves the vault, and Lectern makes no network requests.
 
 ## Known limits
 

@@ -176,6 +176,9 @@ def main():
     (obs / "community-plugins.json").write_text(json.dumps(["lectern"]))
     # Reading view, so the sidecar shows as a clean note in the last shot.
     (obs / "app.json").write_text(json.dumps({"defaultViewMode": "preview", "propertiesInDocument": "hidden"}))
+    # Lectern ships no default hotkey; bind the one the demo presses.
+    (obs / "hotkeys.json").write_text(json.dumps(
+        {"lectern:comment-on-selection": [{"modifiers": ["Mod", "Alt"], "key": "M"}]}))
     (obs / "appearance.json").write_text(json.dumps({"theme": "obsidian"}))
     print(vault)
 

@@ -1,6 +1,7 @@
 import { Notice } from "obsidian";
 import hljs from "highlight.js";
 import { LANGUAGE_ALIASES } from "../constants";
+import { parseUntrustedHtml } from "../util/safeHtml";
 import { looksUndecodable } from "../util/text";
 import { Renderer, type ToolbarItem } from "./Renderer";
 
@@ -108,10 +109,10 @@ export class CodeRenderer extends Renderer {
 		}
 
 		// highlight.js escapes all text it emits, so the only markup here is its
-		// own <span class="hljs-*">. Parsing it into a detached element is just
-		// how we get a tree to walk, not a trust boundary.
-		const holder = document.createElement("div");
-		holder.innerHTML = highlightedHtml;
+		// own <span class="hljs-*">. It still goes through the sanitiser: the
+		// detached parse is how we get a tree to walk, and no innerHTML is needed.
+		const holder = createDiv();
+		holder.appendChild(parseUntrustedHtml(highlightedHtml));
 
 		const lines = splitHighlightedIntoLines(holder);
 		const grid = this.ctx.container.createDiv({ cls: "lectern-code" });

@@ -36,7 +36,7 @@ pdf/PdfCommentController.ts  one PDF tab: session host, events, the rail strip
 pdf/PdfCommentManager.ts     one controller per PDF tab, kept in sync on workspace events
 ```
 
-**This relies on Obsidian internals that are not public API.** The only public PDF hook is `loadPdfJs()`. The controller reads `view.viewer.child`, its PDF.js `PDFViewer` and event bus, and subscribes to `textlayerrendered`. It never patches prototypes. Tested on Obsidian 1.14.4 with PDF.js 5.3.34. If an update changes those fields, `probePdfInternals` returns null, the feature switches itself off with a notice, and the viewer is left untouched. It also stays off while PDF++ is enabled, since both would draw over the same pages.
+**This relies on Obsidian internals that are not public API.** The only public PDF hook is `loadPdfJs()`. The controller reads `view.viewer.child`, its PDF.js `PDFViewer` and event bus, and subscribes to `textlayerrendered`. The controller itself never patches prototypes. The one exception is `pdf/pdfContextMenu.ts`: the PDF right-click menu is built in the viewer's private `onContextMenu` and fires no event, so it wraps `Menu.prototype.showAtMouseEvent` to add **Highlight and comment**. The wrap adds its item only for right-clicks on a PDF page it controls, swallows its own errors, always calls the original, and unwraps on unload (or goes inert if another plugin wrapped the method after it). Tested on Obsidian 1.14.4 with PDF.js 5.3.34. If an update changes those fields, `probePdfInternals` returns null, the feature switches itself off with a notice, and the viewer is left untouched. It also stays off while PDF++ is enabled, since both would draw over the same pages.
 
 Two PDF.js behaviours shape the code:
 
