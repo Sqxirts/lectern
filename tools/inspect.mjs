@@ -156,7 +156,7 @@ for (const file of files) {
       const t = new Image();
       t.src = `data:image/png;base64,${truth}`;
       await t.decode();
-      const slide = document.querySelector(".vault-scope-slide").getBoundingClientRect();
+      const slide = document.querySelector(".lectern-slide").getBoundingClientRect();
       const tc = document.createElement("canvas");
       tc.width = t.naturalWidth;
       tc.height = t.naturalHeight;

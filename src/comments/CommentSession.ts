@@ -5,7 +5,7 @@ import { newCommentId, nowStamp, type Anchor, type CommentStatus, type PlacedCom
  * The comment workflow for one open file: load the sidecar, place comments,
  * turn a selection into a draft, and save, edit, resolve or delete.
  *
- * Shared by every view that shows comments. ScopeView is the first; the PDF
+ * Shared by every view that shows comments. LecternView is the first; the PDF
  * controller will be the second. What differs between them (how a selection
  * becomes an anchor, how an anchor is drawn) comes in through CommentHost.
  *
@@ -171,7 +171,7 @@ export class CommentSession<F = unknown> implements RailDelegate {
 			// Leave the draft open so the text isn't lost, and let Save retry.
 			if (!this.destroyed) this.draftAnchor = anchor;
 			this.services.notify("Could not save the comment. Try again.");
-			console.error("[vault-scope] comment save failed", error);
+			console.error("[lectern] comment save failed", error);
 			return;
 		}
 

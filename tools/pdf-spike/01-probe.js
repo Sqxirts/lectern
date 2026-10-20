@@ -1,4 +1,4 @@
-const path = "Degree/Study-Plans/CYBR310-SecProg1/CYBR 310 - Syllabus (original PDF).pdf";
+const path = globalThis.LECTERN_PDF; // set LECTERN_PDF to a vault-relative PDF path before running cdp.mjs
 const file = app.vault.getAbstractFileByPath(path);
 const leaf = app.workspace.getLeaf("tab");
 await leaf.openFile(file);

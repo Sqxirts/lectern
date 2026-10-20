@@ -13,12 +13,12 @@ const here = dirname(fileURLToPath(import.meta.url));
  * variable. Falling back to ./dist means a fresh clone still builds.
  */
 function resolveOutDir() {
-	if (process.env.VAULT_SCOPE_OUT) return process.env.VAULT_SCOPE_OUT;
+	if (process.env.LECTERN_OUT) return process.env.LECTERN_OUT;
 
 	const envFile = join(here, ".env.local");
 	if (existsSync(envFile)) {
 		for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
-			const match = /^\s*VAULT_SCOPE_OUT\s*=\s*(.+?)\s*$/.exec(line);
+			const match = /^\s*LECTERN_OUT\s*=\s*(.+?)\s*$/.exec(line);
 			if (match) {
 				const value = match[1].replace(/^["']|["']$/g, "");
 				if (value) return isAbsolute(value) ? value : join(here, value);
@@ -27,9 +27,9 @@ function resolveOutDir() {
 	}
 
 	console.warn(
-		"[vault-scope] No VAULT_SCOPE_OUT set, building to ./dist.\n" +
+		"[lectern] No LECTERN_OUT set, building to ./dist.\n" +
 			"             Copy .env.example to .env.local and point it at\n" +
-			"             <your vault>/.obsidian/plugins/vault-scope to install on build."
+			"             <your vault>/.obsidian/plugins/lectern to install on build."
 	);
 	return join(here, "dist");
 }
@@ -53,7 +53,7 @@ const copyPlugin = {
 		build.onEnd((result) => {
 			if (result.errors.length === 0) {
 				copyStaticFiles();
-				console.log(`[vault-scope] built -> ${outDir}`);
+				console.log(`[lectern] built -> ${outDir}`);
 			}
 		});
 	},
@@ -95,5 +95,5 @@ if (prod) {
 	await context.dispose();
 } else {
 	await context.watch();
-	console.log("[vault-scope] watching for changes...");
+	console.log("[lectern] watching for changes...");
 }

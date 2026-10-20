@@ -16,14 +16,14 @@ await page.keyboard.press("Control+Alt+KeyM");
 await page.waitForTimeout(600);
 const after = await page.evaluate(() => {
   const leaf = app.workspace.getLeavesOfType("pdf")[0];
-  const draft = leaf.view.containerEl.querySelector(".vault-scope-pdf-strip .vault-scope-card.is-draft");
+  const draft = leaf.view.containerEl.querySelector(".lectern-pdf-strip .lectern-card.is-draft");
   draft?.querySelectorAll("button")[1]?.click(); // Cancel
   return { draftOpened: !!draft };
 });
 await page.waitForTimeout(400);
 const end = await page.evaluate(() => {
   const leaf = app.workspace.getLeavesOfType("pdf")[0];
-  return { stripActiveAfterCancel: leaf.view.containerEl.querySelector(".vault-scope-pdf-strip").classList.contains("is-active"), sidecarWritten: !!app.vault.getAbstractFileByPath("File-Notes") };
+  return { stripActiveAfterCancel: leaf.view.containerEl.querySelector(".lectern-pdf-strip").classList.contains("is-active"), sidecarWritten: !!app.vault.getAbstractFileByPath("File-Notes") };
 });
 console.log(JSON.stringify({ selected: before, ...after, ...end }));
 await browser.close().catch(() => {});

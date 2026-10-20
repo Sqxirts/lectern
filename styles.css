@@ -1,21 +1,21 @@
-/* Vault Scope
+/* Lectern
    Colours come from Obsidian's own variables so the plugin follows whatever
    theme is active, light or dark, instead of fighting it. The one opinion is
    the amber accent used for highlights and comment cards. */
 
 /* The variables also go on the PDF pieces: those live inside Obsidian's own
-   PDF viewer, outside .vault-scope-container, and would otherwise get none. */
-.vault-scope-container,
-.vault-scope-pdf-strip,
-.vault-scope-pdf-overlay,
-.vault-scope-pdf-highlights {
-	--vault-scope-rail-width: 260px;
-	--vault-scope-accent: #b4772b;
-	--vault-scope-accent-soft: rgba(180, 119, 43, 0.22);
-	--vault-scope-accent-flash: rgba(180, 119, 43, 0.55);
+   PDF viewer, outside .lectern-container, and would otherwise get none. */
+.lectern-container,
+.lectern-pdf-strip,
+.lectern-pdf-overlay,
+.lectern-pdf-highlights {
+	--lectern-rail-width: 260px;
+	--lectern-accent: #b4772b;
+	--lectern-accent-soft: rgba(180, 119, 43, 0.22);
+	--lectern-accent-flash: rgba(180, 119, 43, 0.55);
 }
 
-.vault-scope-container {
+.lectern-container {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -25,18 +25,18 @@
 	background: var(--background-primary);
 }
 
-.theme-dark .vault-scope-container,
-.theme-dark .vault-scope-pdf-strip,
-.theme-dark .vault-scope-pdf-overlay,
-.theme-dark .vault-scope-pdf-highlights {
-	--vault-scope-accent: #d9a05b;
-	--vault-scope-accent-soft: rgba(217, 160, 91, 0.26);
-	--vault-scope-accent-flash: rgba(217, 160, 91, 0.6);
+.theme-dark .lectern-container,
+.theme-dark .lectern-pdf-strip,
+.theme-dark .lectern-pdf-overlay,
+.theme-dark .lectern-pdf-highlights {
+	--lectern-accent: #d9a05b;
+	--lectern-accent-soft: rgba(217, 160, 91, 0.26);
+	--lectern-accent-flash: rgba(217, 160, 91, 0.6);
 }
 
 /* ---------- toolbar ---------- */
 
-.vault-scope-toolbar {
+.lectern-toolbar {
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -47,20 +47,20 @@
 	background: var(--background-secondary);
 }
 
-.vault-scope-toolbar-group {
+.lectern-toolbar-group {
 	display: flex;
 	align-items: center;
 	gap: 4px;
 }
 
-.vault-scope-toolbar-sep {
+.lectern-toolbar-sep {
 	width: 1px;
 	height: 18px;
 	margin: 0 4px;
 	background: var(--background-modifier-border);
 }
 
-.vault-scope-toolbar-btn {
+.lectern-toolbar-btn {
 	padding: 4px 10px;
 	height: 28px;
 	border: none;
@@ -73,24 +73,24 @@
 	box-shadow: none;
 }
 
-.vault-scope-toolbar-btn:hover:not(:disabled) {
+.lectern-toolbar-btn:hover:not(:disabled) {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
 
-.vault-scope-toolbar-btn.is-active {
-	background: var(--vault-scope-accent-soft);
+.lectern-toolbar-btn.is-active {
+	background: var(--lectern-accent-soft);
 	color: var(--text-normal);
 }
 
-.vault-scope-toolbar-btn:disabled {
+.lectern-toolbar-btn:disabled {
 	opacity: 0.55;
 	cursor: default;
 }
 
 /* ---------- scroll + zoom ---------- */
 
-.vault-scope-wrapper {
+.lectern-wrapper {
 	position: relative;
 	flex: 1;
 	min-height: 0;
@@ -99,19 +99,19 @@
 }
 
 /* Room for the comment rail, only while it has a comment or a draft to show. */
-.vault-scope-wrapper.has-rail {
-	padding-right: calc(var(--vault-scope-rail-width, 260px) + 32px);
+.lectern-wrapper.has-rail {
+	padding-right: calc(var(--lectern-rail-width, 260px) + 32px);
 }
 
-.vault-scope-wrapper.is-panning {
+.lectern-wrapper.is-panning {
 	cursor: grabbing;
 }
 
-.vault-scope-sizer {
+.lectern-sizer {
 	position: relative;
 }
 
-.vault-scope-content {
+.lectern-content {
 	transform-origin: 0 0;
 	width: max-content;
 	min-width: 100%;
@@ -127,17 +127,17 @@
  * slide x zoom, and auto margins centre it while it fits; once it is wider
  * than the pane the margins fall to zero and it scrolls from the left edge.
  */
-.vault-scope-pptx-active .vault-scope-content,
-.vault-scope-docx-active .vault-scope-content {
+.lectern-pptx-active .lectern-content,
+.lectern-docx-active .lectern-content {
 	min-width: 0;
 }
 
-.vault-scope-pptx-active .vault-scope-sizer,
-.vault-scope-docx-active .vault-scope-sizer {
+.lectern-pptx-active .lectern-sizer,
+.lectern-docx-active .lectern-sizer {
 	margin: 0 auto;
 }
 
-.vault-scope-zoom-indicator {
+.lectern-zoom-indicator {
 	position: absolute;
 	right: 12px;
 	bottom: 12px;
@@ -153,20 +153,20 @@
 
 /* ---------- states ---------- */
 
-.vault-scope-empty,
-.vault-scope-error,
-.vault-scope-truncated {
+.lectern-empty,
+.lectern-error,
+.lectern-truncated {
 	padding: 24px;
 	color: var(--text-muted);
 	font-size: 14px;
 	text-align: center;
 }
 
-.vault-scope-error {
+.lectern-error {
 	color: var(--text-error);
 }
 
-.vault-scope-truncated {
+.lectern-truncated {
 	font-size: 12px;
 	text-align: left;
 	padding: 8px 0 0;
@@ -174,7 +174,7 @@
 
 /* ---------- code ---------- */
 
-.vault-scope-code {
+.lectern-code {
 	display: grid;
 	grid-template-columns: max-content 1fr;
 	font-family: var(--font-monospace);
@@ -182,11 +182,11 @@
 	line-height: 1.6;
 }
 
-.vault-scope-code-row {
+.lectern-code-row {
 	display: contents;
 }
 
-.vault-scope-code-ln {
+.lectern-code-ln {
 	padding-right: 14px;
 	color: var(--text-faint);
 	text-align: right;
@@ -194,7 +194,7 @@
 	white-space: nowrap;
 }
 
-.vault-scope-code-text {
+.lectern-code-text {
 	white-space: pre-wrap;
 	word-break: break-word;
 	background: transparent;
@@ -205,99 +205,99 @@
 /* highlight.js wraps tokens in hljs-* spans but ships no colors of its own.
    Map them onto Obsidian's code-block palette so a viewed file matches a
    fenced block in a note and follows the user's theme, light and dark. */
-.vault-scope-code-text .hljs-comment,
-.vault-scope-code-text .hljs-quote {
+.lectern-code-text .hljs-comment,
+.lectern-code-text .hljs-quote {
 	color: var(--code-comment);
 	font-style: italic;
 }
 
 /* hljs splits int/void into hljs-type; Obsidian's fenced blocks color them as
    keywords, so do the same and a viewed file matches its note mirror. */
-.vault-scope-code-text .hljs-keyword,
-.vault-scope-code-text .hljs-type,
-.vault-scope-code-text .hljs-doctag,
-.vault-scope-code-text .hljs-selector-tag {
+.lectern-code-text .hljs-keyword,
+.lectern-code-text .hljs-type,
+.lectern-code-text .hljs-doctag,
+.lectern-code-text .hljs-selector-tag {
 	color: var(--code-keyword);
 }
 
-.vault-scope-code-text .hljs-string,
-.vault-scope-code-text .hljs-regexp,
-.vault-scope-code-text .hljs-char {
+.lectern-code-text .hljs-string,
+.lectern-code-text .hljs-regexp,
+.lectern-code-text .hljs-char {
 	color: var(--code-string);
 }
 
-.vault-scope-code-text .hljs-number,
-.vault-scope-code-text .hljs-literal,
-.vault-scope-code-text .hljs-symbol,
-.vault-scope-code-text .hljs-bullet {
+.lectern-code-text .hljs-number,
+.lectern-code-text .hljs-literal,
+.lectern-code-text .hljs-symbol,
+.lectern-code-text .hljs-bullet {
 	color: var(--code-value);
 }
 
 /* built_in is library calls (printf, len, print): colored as functions */
-.vault-scope-code-text .hljs-title,
-.vault-scope-code-text .hljs-section,
-.vault-scope-code-text .hljs-built_in {
+.lectern-code-text .hljs-title,
+.lectern-code-text .hljs-section,
+.lectern-code-text .hljs-built_in {
 	color: var(--code-function);
 }
 
-.vault-scope-code-text .hljs-tag,
-.vault-scope-code-text .hljs-name,
-.vault-scope-code-text .hljs-selector-id,
-.vault-scope-code-text .hljs-selector-class {
+.lectern-code-text .hljs-tag,
+.lectern-code-text .hljs-name,
+.lectern-code-text .hljs-selector-id,
+.lectern-code-text .hljs-selector-class {
 	color: var(--code-tag);
 }
 
-.vault-scope-code-text .hljs-attr,
-.vault-scope-code-text .hljs-attribute,
-.vault-scope-code-text .hljs-property,
-.vault-scope-code-text .hljs-variable,
-.vault-scope-code-text .hljs-template-variable {
+.lectern-code-text .hljs-attr,
+.lectern-code-text .hljs-attribute,
+.lectern-code-text .hljs-property,
+.lectern-code-text .hljs-variable,
+.lectern-code-text .hljs-template-variable {
 	color: var(--code-property);
 }
 
 /* Preprocessor lines (#include, #define) and decorators/annotations.
    Their inner keyword gets the same color so the whole directive reads as
    one unit; an <include path> or "string" inside keeps the string color. */
-.vault-scope-code-text .hljs-meta,
-.vault-scope-code-text .hljs-meta .hljs-keyword {
+.lectern-code-text .hljs-meta,
+.lectern-code-text .hljs-meta .hljs-keyword {
 	color: var(--code-important);
 }
 
-.vault-scope-code-text .hljs-meta .hljs-string {
+.lectern-code-text .hljs-meta .hljs-string {
 	color: var(--code-string);
 }
 
-.vault-scope-code-text .hljs-operator {
+.lectern-code-text .hljs-operator {
 	color: var(--code-operator);
 }
 
-.vault-scope-code-text .hljs-punctuation {
+.lectern-code-text .hljs-punctuation {
 	color: var(--code-punctuation);
 }
 
-.vault-scope-code-text .hljs-addition {
+.lectern-code-text .hljs-addition {
 	color: var(--color-green);
 }
 
-.vault-scope-code-text .hljs-deletion {
+.lectern-code-text .hljs-deletion {
 	color: var(--color-red);
 }
 
-.vault-scope-code-text .hljs-emphasis {
+.lectern-code-text .hljs-emphasis {
 	font-style: italic;
 }
 
-.vault-scope-code-text .hljs-strong {
+.lectern-code-text .hljs-strong {
 	font-weight: bold;
 }
 
-.vault-scope-editing .vault-scope-content,
-.vault-scope-editing .vault-scope-sizer {
+.lectern-editing .lectern-content,
+.lectern-editing .lectern-sizer {
 	width: 100%;
 	height: 100%;
 }
 
-.vault-scope-editor {
+.lectern-editor {
 	display: flex;
 	min-height: 60vh;
 	font-family: var(--font-monospace);
@@ -308,7 +308,7 @@
 	overflow: hidden;
 }
 
-.vault-scope-editor-gutter {
+.lectern-editor-gutter {
 	flex: 0 0 auto;
 	padding: 12px 6px 12px 12px;
 	text-align: right;
@@ -319,12 +319,12 @@
 	overflow: hidden;
 }
 
-.vault-scope-editor-gutter span {
+.lectern-editor-gutter span {
 	display: block;
 	white-space: nowrap;
 }
 
-.vault-scope-editor-area {
+.lectern-editor-area {
 	flex: 1;
 	padding: 12px 16px;
 	font: inherit;
@@ -338,8 +338,8 @@
 
 /* ---------- shared page look for docx and xlsx ---------- */
 
-.vault-scope-page,
-.vault-scope-docx-active .vault-scope-docx-page {
+.lectern-page,
+.lectern-docx-active .lectern-docx-page {
 	background: #ffffff;
 	color: #1a1a1a;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
@@ -348,25 +348,25 @@
 	user-select: text;
 }
 
-.theme-dark .vault-scope-page,
-.theme-dark .vault-scope-docx-active .vault-scope-docx-page {
+.theme-dark .lectern-page,
+.theme-dark .lectern-docx-active .lectern-docx-page {
 	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-.vault-scope-docx-active .vault-scope-content {
+.lectern-docx-active .lectern-content {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 }
 
-.vault-scope-docx-body {
+.lectern-docx-body {
 	background: transparent !important;
 	padding: 0 !important;
 }
 
 /* ---------- xlsx ---------- */
 
-.vault-scope-xlsx-tabs {
+.lectern-xlsx-tabs {
 	display: flex;
 	gap: 2px;
 	flex-wrap: wrap;
@@ -375,7 +375,7 @@
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.vault-scope-xlsx-tab {
+.lectern-xlsx-tab {
 	padding: 4px 12px;
 	border-radius: 4px;
 	font-size: 13px;
@@ -383,30 +383,30 @@
 	cursor: pointer;
 }
 
-.vault-scope-xlsx-tab:hover {
+.lectern-xlsx-tab:hover {
 	background: var(--background-modifier-hover);
 }
 
-.vault-scope-xlsx-tab.is-active {
-	background: var(--vault-scope-accent-soft);
+.lectern-xlsx-tab.is-active {
+	background: var(--lectern-accent-soft);
 	color: var(--text-normal);
 }
 
-.vault-scope-xlsx-sheet {
+.lectern-xlsx-sheet {
 	display: none;
 }
 
-.vault-scope-xlsx-sheet.is-active {
+.lectern-xlsx-sheet.is-active {
 	display: block;
 }
 
-.vault-scope-page table {
+.lectern-page table {
 	border-collapse: collapse;
 	font-size: 12px;
 	font-family: var(--font-interface);
 }
 
-.vault-scope-page td {
+.lectern-page td {
 	border: 1px solid #d3d3d3;
 	padding: 3px 7px;
 	white-space: nowrap;
@@ -416,32 +416,32 @@
 
 /* ---------- pptx ---------- */
 
-.vault-scope-pptx-active .vault-scope-content {
+.lectern-pptx-active .lectern-content {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 20px;
 }
 
-.vault-scope-slide-card {
+.lectern-slide-card {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
 }
 
-.vault-scope-slide-header {
+.lectern-slide-header {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
 
-.vault-scope-slide-number {
+.lectern-slide-number {
 	font-size: 12px;
 	color: var(--text-faint);
 	font-variant-numeric: tabular-nums;
 }
 
-.vault-scope-slide {
+.lectern-slide {
 	position: relative;
 	background: #ffffff;
 	/*
@@ -458,25 +458,25 @@
 	-webkit-user-select: text;
 }
 
-.theme-dark .vault-scope-slide {
+.theme-dark .lectern-slide {
 	box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-.vault-scope-slide-notes {
+.lectern-slide-notes {
 	max-width: 100%;
 	padding: 10px 14px;
-	border-left: 3px solid var(--vault-scope-accent);
+	border-left: 3px solid var(--lectern-accent);
 	background: var(--background-secondary);
 	border-radius: 0 4px 4px 0;
 	font-size: 13px;
 	color: var(--text-muted);
 }
 
-.vault-scope-slide-notes.is-hidden {
+.lectern-slide-notes.is-hidden {
 	display: none;
 }
 
-.vault-scope-slide-notes-label {
+.lectern-slide-notes-label {
 	font-size: 11px;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
@@ -484,46 +484,46 @@
 	margin-bottom: 4px;
 }
 
-.vault-scope-slide-notes p {
+.lectern-slide-notes p {
 	margin: 0 0 6px;
 }
 
 /* ---------- highlights ---------- */
 
-.vault-scope-highlight {
-	background: var(--vault-scope-accent-soft);
-	border-bottom: 2px solid var(--vault-scope-accent);
+.lectern-highlight {
+	background: var(--lectern-accent-soft);
+	border-bottom: 2px solid var(--lectern-accent);
 	cursor: pointer;
 	border-radius: 2px;
 }
 
-td.vault-scope-highlight {
-	outline: 2px solid var(--vault-scope-accent);
+td.lectern-highlight {
+	outline: 2px solid var(--lectern-accent);
 	outline-offset: -2px;
 }
 
-.vault-scope-highlight.is-flashing {
-	background: var(--vault-scope-accent-flash);
+.lectern-highlight.is-flashing {
+	background: var(--lectern-accent-flash);
 	transition: background 0.2s ease;
 }
 
 /* ---------- comment rail ---------- */
 
-.vault-scope-rail {
+.lectern-rail {
 	position: absolute;
 	top: 0;
-	width: var(--vault-scope-rail-width, 260px);
+	width: var(--lectern-rail-width, 260px);
 	pointer-events: none;
 	z-index: 2;
 }
 
-.vault-scope-card {
+.lectern-card {
 	position: absolute;
 	width: 100%;
 	pointer-events: auto;
 	padding: 10px 12px;
 	border: 1px solid var(--background-modifier-border);
-	border-left: 3px solid var(--vault-scope-accent);
+	border-left: 3px solid var(--lectern-accent);
 	border-radius: 6px;
 	background: var(--background-primary);
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
@@ -531,21 +531,21 @@ td.vault-scope-highlight {
 	transition: top 0.15s ease, box-shadow 0.15s ease;
 }
 
-.vault-scope-card.is-focused {
+.lectern-card.is-focused {
 	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
 	border-left-width: 5px;
 }
 
-.vault-scope-card.is-resolved {
+.lectern-card.is-resolved {
 	opacity: 0.55;
 	border-left-color: var(--text-faint);
 }
 
-.vault-scope-card.is-orphaned {
+.lectern-card.is-orphaned {
 	border-left-color: var(--text-error);
 }
 
-.vault-scope-card-meta {
+.lectern-card-meta {
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -556,7 +556,7 @@ td.vault-scope-highlight {
 	font-variant-numeric: tabular-nums;
 }
 
-.vault-scope-badge {
+.lectern-badge {
 	padding: 1px 6px;
 	border-radius: 999px;
 	background: var(--background-modifier-error);
@@ -566,18 +566,18 @@ td.vault-scope-highlight {
 	text-transform: uppercase;
 }
 
-.vault-scope-badge.is-resolved {
+.lectern-badge.is-resolved {
 	background: var(--background-modifier-border);
 	color: var(--text-muted);
 }
 
-.vault-scope-card-body {
+.lectern-card-body {
 	white-space: pre-wrap;
 	word-break: break-word;
 	color: var(--text-normal);
 }
 
-.vault-scope-card-input {
+.lectern-card-input {
 	width: 100%;
 	min-height: 64px;
 	resize: vertical;
@@ -590,20 +590,20 @@ td.vault-scope-highlight {
 	color: var(--text-normal);
 }
 
-.vault-scope-card-actions {
+.lectern-card-actions {
 	display: flex;
 	gap: 6px;
 	margin-top: 8px;
 }
 
-.vault-scope-card-actions button {
+.lectern-card-actions button {
 	padding: 3px 10px;
 	font-size: 12px;
 	height: auto;
 	box-shadow: none;
 }
 
-.vault-scope-connectors {
+.lectern-connectors {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -612,28 +612,28 @@ td.vault-scope-highlight {
 	z-index: 1;
 }
 
-.vault-scope-connector {
+.lectern-connector {
 	fill: none;
-	stroke: var(--vault-scope-accent);
+	stroke: var(--lectern-accent);
 	stroke-width: 1;
 	opacity: 0.35;
 }
 
-.vault-scope-connector.is-focused {
+.lectern-connector.is-focused {
 	opacity: 0.85;
 	stroke-width: 1.5;
 }
 
 /* ---------- settings ---------- */
 
-.vault-scope-ext-grid {
+.lectern-ext-grid {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
 	margin: 4px 0 18px;
 }
 
-.vault-scope-ext-chip {
+.lectern-ext-chip {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
@@ -646,7 +646,7 @@ td.vault-scope-highlight {
 	cursor: pointer;
 }
 
-.vault-scope-ext-chip input {
+.lectern-ext-chip input {
 	margin: 0;
 }
 
@@ -655,7 +655,7 @@ td.vault-scope-highlight {
  * the file. A labelled box beats a broken-image icon, which reads as a bug in
  * the deck rather than a limit of the renderer.
  */
-.vault-scope-metafile-missing {
+.lectern-metafile-missing {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -674,7 +674,7 @@ td.vault-scope-highlight {
 }
 
 /* Shown above a file that did not decode as UTF-8, where saving would destroy it. */
-.vault-scope-binary-warning {
+.lectern-binary-warning {
 	margin-bottom: 12px;
 	padding: 8px 12px;
 	border-left: 3px solid var(--text-error);
@@ -700,7 +700,7 @@ td.vault-scope-highlight {
  * So relax it only on elements that hold no image. :has() makes that a
  * one-selector distinction. !important because the renderer sets these inline.
  */
-.vault-scope-slide *:not(:has(img)) {
+.lectern-slide *:not(:has(img)) {
 	overflow: visible !important;
 }
 
@@ -717,7 +717,7 @@ td.vault-scope-highlight {
  * Only the two images wider than their wrapper were affected, which is why
  * this looked like one arbitrary broken image rather than a systematic fault.
  */
-.vault-scope-slide img {
+.lectern-slide img {
 	max-width: none !important;
 	max-height: none !important;
 }
@@ -737,7 +737,7 @@ td.vault-scope-highlight {
  * A cell with its own <a:solidFill> in <a:tcPr> is spared: that colour came
  * from the deck, not the renderer (week 5 slide 11's navy header row).
  */
-.vault-scope-slide table.vault-scope-table-unstyled td:not(.vault-scope-cell-filled) {
+.lectern-slide table.lectern-table-unstyled td:not(.lectern-cell-filled) {
 	background-color: transparent !important;
 	border: 1px solid #9a9a9a;
 }
@@ -753,42 +753,42 @@ td.vault-scope-highlight {
  * CYBR 226 weeks 1 and 2. isolation makes the wrapper the stacking context, so
  * the background layer lands on top of the white instead of under it.
  */
-.vault-scope-slide > .slide {
+.lectern-slide > .slide {
 	isolation: isolate;
 }
 
 /* ---------- PDF comments (inside Obsidian's PDF viewer) ---------- */
 
 /* Under the text layer, so text stays selectable. Sized to the page's padding box. */
-.vault-scope-pdf-highlights {
+.lectern-pdf-highlights {
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
 	z-index: 1;
 }
 
-.vault-scope-pdf-box {
+.lectern-pdf-box {
 	position: absolute;
-	background: var(--vault-scope-accent-soft);
-	border-bottom: 2px solid var(--vault-scope-accent);
+	background: var(--lectern-accent-soft);
+	border-bottom: 2px solid var(--lectern-accent);
 	border-radius: 2px;
 	mix-blend-mode: multiply;
 }
 
-.theme-dark .vault-scope-pdf-box {
+.theme-dark .lectern-pdf-box {
 	mix-blend-mode: screen;
 }
 
-.vault-scope-pdf-box.is-resolved {
+.lectern-pdf-box.is-resolved {
 	opacity: 0.35;
 }
 
-.vault-scope-pdf-box.is-flashing {
-	background: var(--vault-scope-accent);
+.lectern-pdf-box.is-flashing {
+	background: var(--lectern-accent);
 }
 
 /* Stand-in for a comment on a page PDF.js has not rendered yet. */
-.vault-scope-pdf-marker {
+.lectern-pdf-marker {
 	position: absolute;
 	left: 0;
 	width: 100%;
@@ -796,29 +796,29 @@ td.vault-scope-highlight {
 }
 
 /* The strip the scroller gives up for the rail. Width matches STRIP_WIDTH. */
-.vault-scope-pdf-strip {
+.lectern-pdf-strip {
 	display: none;
 	position: absolute;
 	top: 0;
 	right: 0;
 	bottom: 0;
-	width: calc(var(--vault-scope-rail-width, 260px) + 32px);
+	width: calc(var(--lectern-rail-width, 260px) + 32px);
 	overflow: hidden;
 	background: var(--background-secondary);
 	border-left: 1px solid var(--background-modifier-border);
 }
 
-.vault-scope-pdf-strip.is-active {
+.lectern-pdf-strip.is-active {
 	display: block;
 }
 
-.vault-scope-rail.is-beside {
+.lectern-rail.is-beside {
 	left: 16px;
 	will-change: transform;
 }
 
 /* Connector lines span scroller and strip; clip them to the viewer. */
-.vault-scope-pdf-overlay {
+.lectern-pdf-overlay {
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
@@ -826,6 +826,6 @@ td.vault-scope-highlight {
 	z-index: 3;
 }
 
-.vault-scope-connectors.is-beside {
+.lectern-connectors.is-beside {
 	overflow: hidden;
 }

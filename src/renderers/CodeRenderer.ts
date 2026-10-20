@@ -91,7 +91,7 @@ export class CodeRenderer extends Renderer {
 	private drawReadOnly(): void {
 		if (this.readOnly) {
 			this.ctx.container.createDiv({
-				cls: "vault-scope-binary-warning",
+				cls: "lectern-binary-warning",
 				text:
 					"This file is not valid UTF-8 text, so what you see below is a lossy decode. " +
 					"Editing is disabled: saving it would overwrite the original with the damaged text.",
@@ -114,13 +114,13 @@ export class CodeRenderer extends Renderer {
 		holder.innerHTML = highlightedHtml;
 
 		const lines = splitHighlightedIntoLines(holder);
-		const grid = this.ctx.container.createDiv({ cls: "vault-scope-code" });
+		const grid = this.ctx.container.createDiv({ cls: "lectern-code" });
 
 		lines.forEach((fragment, index) => {
 			const lineNumber = index + 1;
-			const row = grid.createDiv({ cls: "vault-scope-code-row" });
-			row.createSpan({ cls: "vault-scope-code-ln", text: String(lineNumber) });
-			const code = row.createEl("code", { cls: "vault-scope-code-text hljs" });
+			const row = grid.createDiv({ cls: "lectern-code-row" });
+			row.createSpan({ cls: "lectern-code-ln", text: String(lineNumber) });
+			const code = row.createEl("code", { cls: "lectern-code-text hljs" });
 			code.dataset.scopeKind = "code";
 			code.dataset.scopeIndex = String(lineNumber);
 			code.appendChild(fragment);
@@ -128,10 +128,10 @@ export class CodeRenderer extends Renderer {
 	}
 
 	private drawEditor(): void {
-		const wrap = this.ctx.container.createDiv({ cls: "vault-scope-editor" });
-		this.gutter = wrap.createDiv({ cls: "vault-scope-editor-gutter" });
+		const wrap = this.ctx.container.createDiv({ cls: "lectern-editor" });
+		this.gutter = wrap.createDiv({ cls: "lectern-editor-gutter" });
 
-		this.textarea = wrap.createEl("textarea", { cls: "vault-scope-editor-area" });
+		this.textarea = wrap.createEl("textarea", { cls: "lectern-editor-area" });
 		this.textarea.value = this.content;
 		this.textarea.spellcheck = false;
 		this.syncGutter();
@@ -225,7 +225,7 @@ export class CodeRenderer extends Renderer {
 	}
 
 	wrapperClass(): string | null {
-		return this.editing ? "vault-scope-editing" : null;
+		return this.editing ? "lectern-editing" : null;
 	}
 
 	commentingBlocked(): string | null {

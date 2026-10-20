@@ -25,7 +25,7 @@ describe("shape art", () => {
 
 		const host = rendered();
 		expect(applyShapeArt(host, arts)).toBe(1);
-		const svg = host.querySelector("svg.vault-scope-shape") as SVGSVGElement;
+		const svg = host.querySelector("svg.lectern-shape") as SVGSVGElement;
 		expect(svg.style.zIndex).toBe("7");
 		expect(svg.querySelector("path")!.getAttribute("fill")).toBe("rgba(68, 114, 196, 0.3)");
 	});

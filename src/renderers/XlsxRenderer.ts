@@ -22,7 +22,7 @@ export class XlsxRenderer extends Renderer {
 		this.ctx.container.empty();
 
 		if (this.sheetNames.length === 0) {
-			this.ctx.container.createDiv({ cls: "vault-scope-empty", text: "This workbook has no sheets." });
+			this.ctx.container.createDiv({ cls: "lectern-empty", text: "This workbook has no sheets." });
 			return;
 		}
 
@@ -30,9 +30,9 @@ export class XlsxRenderer extends Renderer {
 			this.drawTabs();
 		}
 
-		const sheets = this.ctx.container.createDiv({ cls: "vault-scope-xlsx-sheets" });
+		const sheets = this.ctx.container.createDiv({ cls: "lectern-xlsx-sheets" });
 		this.sheetNames.forEach((name, index) => {
-			const sheetEl = sheets.createDiv({ cls: "vault-scope-xlsx-sheet" });
+			const sheetEl = sheets.createDiv({ cls: "lectern-xlsx-sheet" });
 			sheetEl.dataset.sheetIndex = String(index);
 			sheetEl.toggleClass("is-active", index === this.activeSheet);
 			this.drawSheet(sheetEl, workbook.Sheets[name], name);
@@ -40,9 +40,9 @@ export class XlsxRenderer extends Renderer {
 	}
 
 	private drawTabs(): void {
-		const bar = this.ctx.container.createDiv({ cls: "vault-scope-xlsx-tabs" });
+		const bar = this.ctx.container.createDiv({ cls: "lectern-xlsx-tabs" });
 		this.sheetNames.forEach((name, index) => {
-			const tab = bar.createDiv({ cls: "vault-scope-xlsx-tab", text: name });
+			const tab = bar.createDiv({ cls: "lectern-xlsx-tab", text: name });
 			tab.toggleClass("is-active", index === this.activeSheet);
 			tab.addEventListener("click", () => this.showSheet(index));
 		});
@@ -51,18 +51,18 @@ export class XlsxRenderer extends Renderer {
 	private showSheet(index: number): void {
 		this.activeSheet = index;
 		this.ctx.container
-			.querySelectorAll<HTMLElement>(".vault-scope-xlsx-tab")
+			.querySelectorAll<HTMLElement>(".lectern-xlsx-tab")
 			.forEach((tab, i) => tab.toggleClass("is-active", i === index));
 		this.ctx.container
-			.querySelectorAll<HTMLElement>(".vault-scope-xlsx-sheet")
+			.querySelectorAll<HTMLElement>(".lectern-xlsx-sheet")
 			.forEach((sheet, i) => sheet.toggleClass("is-active", i === index));
 	}
 
 	private drawSheet(host: HTMLElement, sheet: XLSX.WorkSheet | undefined, sheetName: string): void {
-		const page = host.createDiv({ cls: "vault-scope-page" });
+		const page = host.createDiv({ cls: "lectern-page" });
 
 		if (!sheet || !sheet["!ref"]) {
-			page.createDiv({ cls: "vault-scope-empty", text: "This sheet is empty." });
+			page.createDiv({ cls: "lectern-empty", text: "This sheet is empty." });
 			return;
 		}
 
@@ -99,7 +99,7 @@ export class XlsxRenderer extends Renderer {
 
 		if (range.e.r > lastRow || range.e.c > lastCol) {
 			page.createDiv({
-				cls: "vault-scope-truncated",
+				cls: "lectern-truncated",
 				text: `Showing the first ${lastRow - range.s.r + 1} rows and ${lastCol - range.s.c + 1} columns of this sheet.`,
 			});
 		}
@@ -132,6 +132,6 @@ export class XlsxRenderer extends Renderer {
 	}
 
 	wrapperClass(): string | null {
-		return "vault-scope-xlsx-active";
+		return "lectern-xlsx-active";
 	}
 }

@@ -1,5 +1,5 @@
 import { App, Notice, TFile, WorkspaceLeaf } from "obsidian";
-import type { ScopeSettings } from "../settings";
+import type { LecternSettings } from "../settings";
 import { CommentRail } from "../comments/CommentRail";
 import { CommentSession, type CommentHost } from "../comments/CommentSession";
 import { CommentStore } from "../comments/CommentStore";
@@ -9,7 +9,7 @@ import { pageElementOf, rangeToSpan } from "./pdfDom";
 import { PDF_BOX_CLASS, clearPage, drawBoxes, drawMarker, renderedTextDivs } from "./pdfHighlights";
 import { probePdfInternals, type PdfInternals, type PdfPageView } from "./pdfInternals";
 
-/** Kept in step with --vault-scope-rail-width in styles.css, plus its 16px gutters. */
+/** Kept in step with --lectern-rail-width in styles.css, plus its 16px gutters. */
 const STRIP_WIDTH = 260 + 32;
 
 /** Re-resolve when the stored anchor changes, e.g. after a hand edit and reload. */
@@ -24,7 +24,7 @@ interface Resolved {
  * Comments on one open PDF, inside Obsidian's own PDF viewer.
  *
  * Lifecycle: `attach` waits for the viewer to finish loading, then builds a
- * CommentSession whose host methods are the PDF versions of what ScopeView
+ * CommentSession whose host methods are the PDF versions of what LecternView
  * does for DOM-rendered files. Anchors are resolved asynchronously on PDF.js
  * text (pdfAnchoring.ts), cached per comment, and drawn whenever PDF.js
  * renders a page's text layer, which it does again after every zoom.
@@ -34,7 +34,7 @@ export class PdfCommentController {
 	readonly file: TFile;
 
 	private app: App;
-	private settings: ScopeSettings;
+	private settings: LecternSettings;
 	private pdf: PdfInternals;
 	private session: CommentSession<TFile> | null = null;
 
@@ -61,7 +61,7 @@ export class PdfCommentController {
 	private resizeObserver: ResizeObserver;
 
 	/** Attach to a PDF leaf once its viewer has a document. Null if this isn't a usable PDF view. */
-	static async attach(app: App, leaf: WorkspaceLeaf, settings: ScopeSettings): Promise<PdfCommentController | null> {
+	static async attach(app: App, leaf: WorkspaceLeaf, settings: LecternSettings): Promise<PdfCommentController | null> {
 		for (let i = 0; i < 100; i++) {
 			const view = leaf.view;
 			const file = (view as { file?: TFile | null }).file;
@@ -83,7 +83,7 @@ export class PdfCommentController {
 		return null;
 	}
 
-	private constructor(app: App, leaf: WorkspaceLeaf, file: TFile, pdf: PdfInternals, settings: ScopeSettings) {
+	private constructor(app: App, leaf: WorkspaceLeaf, file: TFile, pdf: PdfInternals, settings: LecternSettings) {
 		this.app = app;
 		this.leaf = leaf;
 		this.file = file;
@@ -94,8 +94,8 @@ export class PdfCommentController {
 		const parent = container.parentElement!;
 		this.savedRight = container.style.right;
 
-		this.strip = parent.createDiv({ cls: "vault-scope-pdf-strip" });
-		this.overlay = parent.createDiv({ cls: "vault-scope-pdf-overlay" });
+		this.strip = parent.createDiv({ cls: "lectern-pdf-strip" });
+		this.overlay = parent.createDiv({ cls: "lectern-pdf-overlay" });
 
 		this.resizeObserver = new ResizeObserver(() => {
 			this.redrawDetached();
@@ -253,7 +253,7 @@ export class PdfCommentController {
 					try {
 						placement = await resolvePdfAnchor(comment.anchor, pageCount, (n) => this.pageText(n));
 					} catch (error) {
-						console.error("[vault-scope] could not resolve a PDF comment", error);
+						console.error("[lectern] could not resolve a PDF comment", error);
 					}
 				}
 				this.resolved.set(comment.id, { key, placement });

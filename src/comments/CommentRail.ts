@@ -3,14 +3,14 @@ import type { PlacedComment, ScopeComment } from "./types";
 
 const CARD_GAP = 8;
 const MIN_CARD_HEIGHT = 64;
-/** Kept in step with --vault-scope-rail-width in styles.css. */
+/** Kept in step with --lectern-rail-width in styles.css. */
 const RAIL_WIDTH = 260;
 const RAIL_MARGIN = 12;
-/** .vault-scope-wrapper padding, and the padding-right `.has-rail` swaps in for it. */
+/** .lectern-wrapper padding, and the padding-right `.has-rail` swaps in for it. */
 const WRAPPER_PADDING = 16;
 const STRIP_WIDTH = RAIL_WIDTH + 32;
 /** Wrapper classes whose content is centred by auto margins in styles.css. */
-const CENTRED_CLASSES = ["vault-scope-pptx-active", "vault-scope-docx-active"];
+const CENTRED_CLASSES = ["lectern-pptx-active", "lectern-docx-active"];
 
 export interface RailDelegate {
 	saveBody(id: string, body: string): Promise<void>;
@@ -77,12 +77,12 @@ export class CommentRail {
 		this.beside = beside;
 
 		if (beside) {
-			this.railEl = beside.strip.createDiv({ cls: "vault-scope-rail is-beside" });
+			this.railEl = beside.strip.createDiv({ cls: "lectern-rail is-beside" });
 			// createSvg adds `cls` as one classList token, so a space-separated string throws; pass an array.
-			this.connectorEl = beside.overlay.createSvg("svg", { cls: ["vault-scope-connectors", "is-beside"] }) as SVGSVGElement;
+			this.connectorEl = beside.overlay.createSvg("svg", { cls: ["lectern-connectors", "is-beside"] }) as SVGSVGElement;
 		} else {
-			this.railEl = wrapper.createDiv({ cls: "vault-scope-rail" });
-			this.connectorEl = wrapper.createSvg("svg", { cls: "vault-scope-connectors" }) as SVGSVGElement;
+			this.railEl = wrapper.createDiv({ cls: "lectern-rail" });
+			this.connectorEl = wrapper.createSvg("svg", { cls: "lectern-connectors" }) as SVGSVGElement;
 		}
 
 		// Clicking a highlight brings its card forward.
@@ -112,13 +112,13 @@ export class CommentRail {
 		this.closeDraft();
 		this.draftTop = topOffset;
 
-		const card = this.railEl.createDiv({ cls: "vault-scope-card is-draft" });
-		card.createDiv({ cls: "vault-scope-card-meta", text: "New comment" });
+		const card = this.railEl.createDiv({ cls: "lectern-card is-draft" });
+		card.createDiv({ cls: "lectern-card-meta", text: "New comment" });
 
-		const input = card.createEl("textarea", { cls: "vault-scope-card-input" });
+		const input = card.createEl("textarea", { cls: "lectern-card-input" });
 		input.placeholder = "Write your comment";
 
-		const actions = card.createDiv({ cls: "vault-scope-card-actions" });
+		const actions = card.createDiv({ cls: "lectern-card-actions" });
 		const save = actions.createEl("button", { text: "Save", cls: "mod-cta" });
 		const cancel = actions.createEl("button", { text: "Cancel" });
 
@@ -228,27 +228,27 @@ export class CommentRail {
 
 	private buildCard(placed: PlacedComment): HTMLElement {
 		const { comment } = placed;
-		const card = this.railEl.createDiv({ cls: "vault-scope-card" });
+		const card = this.railEl.createDiv({ cls: "lectern-card" });
 		card.dataset.commentId = comment.id;
 		card.toggleClass("is-resolved", comment.status === "resolved");
 		card.toggleClass("is-orphaned", placed.orphaned);
 
-		const meta = card.createDiv({ cls: "vault-scope-card-meta" });
+		const meta = card.createDiv({ cls: "lectern-card-meta" });
 		meta.createSpan({ text: comment.created || "" });
 		if (placed.orphaned) {
 			meta.createSpan({
-				cls: "vault-scope-badge",
+				cls: "lectern-badge",
 				text: "orphaned",
 				attr: { title: "The text this comment pointed at is no longer in the file. The comment is kept, but it has nowhere to attach." },
 			});
 		}
 		if (comment.status === "resolved") {
-			meta.createSpan({ cls: "vault-scope-badge is-resolved", text: "resolved" });
+			meta.createSpan({ cls: "lectern-badge is-resolved", text: "resolved" });
 		}
 
-		const body = card.createDiv({ cls: "vault-scope-card-body", text: comment.body });
+		const body = card.createDiv({ cls: "lectern-card-body", text: comment.body });
 
-		const actions = card.createDiv({ cls: "vault-scope-card-actions" });
+		const actions = card.createDiv({ cls: "lectern-card-actions" });
 
 		const edit = actions.createEl("button", { text: "Edit" });
 		edit.addEventListener("click", () => this.startEdit(card, body, comment));
@@ -275,7 +275,7 @@ export class CommentRail {
 
 	private startEdit(card: HTMLElement, bodyEl: HTMLElement, comment: ScopeComment): void {
 		bodyEl.empty();
-		const input = bodyEl.createEl("textarea", { cls: "vault-scope-card-input" });
+		const input = bodyEl.createEl("textarea", { cls: "lectern-card-input" });
 		input.value = comment.body;
 
 		const commit = async () => {
@@ -433,7 +433,7 @@ export class CommentRail {
 			}
 
 			const line = this.connectorEl.createSvg("path");
-			line.classList.add("vault-scope-connector");
+			line.classList.add("lectern-connector");
 			// A shallow S-curve reads as a link without drawing attention to itself.
 			const midX = from.x + (to.x - from.x) / 2;
 			line.setAttribute("d", `M ${from.x} ${from.y} C ${midX} ${from.y}, ${midX} ${to.y}, ${to.x} ${to.y}`);
@@ -466,7 +466,7 @@ export class CommentRail {
 			const toY = c.top - overlay.top + 14;
 
 			const line = this.connectorEl.createSvg("path");
-			line.classList.add("vault-scope-connector");
+			line.classList.add("lectern-connector");
 			const midX = fromX + (toX - fromX) / 2;
 			line.setAttribute("d", `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`);
 			if (placed.comment.id === this.focusedId) line.classList.add("is-focused");

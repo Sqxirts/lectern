@@ -1,5 +1,5 @@
 import { App, Notice, WorkspaceLeaf } from "obsidian";
-import type { ScopeSettings } from "../settings";
+import type { LecternSettings } from "../settings";
 import { PdfCommentController } from "./PdfCommentController";
 import { isPdfViewStillLoading, probePdfInternals } from "./pdfInternals";
 
@@ -10,13 +10,13 @@ import { isPdfViewStillLoading, probePdfInternals } from "./pdfInternals";
  */
 export class PdfCommentManager {
 	private app: App;
-	private settings: ScopeSettings;
+	private settings: LecternSettings;
 	private controllers = new Map<WorkspaceLeaf, PdfCommentController>();
 	private attaching = new Set<WorkspaceLeaf>();
 	private warnedUnsupported = false;
 	private warnedPdfPlus = false;
 
-	constructor(app: App, settings: ScopeSettings) {
+	constructor(app: App, settings: LecternSettings) {
 		this.app = app;
 		this.settings = settings;
 	}
@@ -61,7 +61,7 @@ export class PdfCommentManager {
 			}
 			this.controllers.set(leaf, controller);
 		} catch (error) {
-			console.error("[vault-scope] could not attach PDF comments", error);
+			console.error("[lectern] could not attach PDF comments", error);
 		} finally {
 			this.attaching.delete(leaf);
 		}
@@ -82,7 +82,7 @@ export class PdfCommentManager {
 		const on = enabled?.has("pdf-plus") ?? false;
 		if (on && !this.warnedPdfPlus) {
 			this.warnedPdfPlus = true;
-			new Notice("Vault Scope: PDF comments are off because PDF++ is enabled. Disable one of them.");
+			new Notice("Lectern: PDF comments are off because PDF++ is enabled. Disable one of them.");
 		}
 		return on;
 	}
@@ -90,6 +90,6 @@ export class PdfCommentManager {
 	private warnUnsupported(): void {
 		if (this.warnedUnsupported) return;
 		this.warnedUnsupported = true;
-		new Notice("Vault Scope: PDF comments are off. This Obsidian version changed its PDF viewer.");
+		new Notice("Lectern: PDF comments are off. This Obsidian version changed its PDF viewer.");
 	}
 }

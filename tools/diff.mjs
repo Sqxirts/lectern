@@ -42,7 +42,7 @@ for (const file of files) {
 
   await page.goto(pathToFileURL(join(oursDir, file)).href);
   await page.waitForTimeout(80);
-  const ours = (await page.locator(".vault-scope-slide").screenshot()).toString("base64");
+  const ours = (await page.locator(".lectern-slide").screenshot()).toString("base64");
 
   const result = await scorer.evaluate(
     async ({ ours, truth, wantHeat }) => {

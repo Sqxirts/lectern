@@ -6,15 +6,15 @@ export class Toolbar {
 	private el: HTMLElement;
 
 	constructor(parent: HTMLElement) {
-		this.el = parent.createDiv({ cls: "vault-scope-toolbar" });
+		this.el = parent.createDiv({ cls: "lectern-toolbar" });
 	}
 
 	render(groups: ToolbarItem[][]): void {
 		this.el.empty();
 
 		groups.filter((group) => group.length > 0).forEach((group, index) => {
-			if (index > 0) this.el.createDiv({ cls: "vault-scope-toolbar-sep" });
-			const wrap = this.el.createDiv({ cls: "vault-scope-toolbar-group" });
+			if (index > 0) this.el.createDiv({ cls: "lectern-toolbar-sep" });
+			const wrap = this.el.createDiv({ cls: "lectern-toolbar-group" });
 			for (const item of group) {
 				this.button(wrap, item);
 			}
@@ -23,7 +23,7 @@ export class Toolbar {
 
 	private button(parent: HTMLElement, item: ToolbarItem): void {
 		const button = parent.createEl("button", {
-			cls: "vault-scope-toolbar-btn",
+			cls: "lectern-toolbar-btn",
 			text: item.text,
 		});
 		setTooltip(button, item.label, { placement: "bottom" });

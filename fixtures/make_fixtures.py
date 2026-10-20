@@ -1,4 +1,4 @@
-"""Build the pptx/docx/xlsx test files Vault Scope is checked against.
+"""Build the pptx/docx/xlsx test files Lectern is checked against.
 
 Run it whenever the fixtures need regenerating:
     python fixtures/make_fixtures.py
@@ -28,7 +28,7 @@ def make_pptx() -> Path:
 
     # 1: title slide
     s = prs.slides.add_slide(title_layout)
-    s.shapes.title.text = "Vault Scope Fixture Deck"
+    s.shapes.title.text = "Lectern Fixture Deck"
     s.placeholders[1].text = "Five slides, speaker notes, a table"
     s.notes_slide.notes_text_frame.text = "Opening notes: say hello, set the agenda."
 
@@ -76,7 +76,7 @@ def make_pptx() -> Path:
 
 def make_docx() -> Path:
     doc = Document()
-    doc.add_heading("Vault Scope Fixture Document", level=1)
+    doc.add_heading("Lectern Fixture Document", level=1)
     doc.add_paragraph("A short paragraph on the first page so there is text to select.")
     doc.add_paragraph("Remember " + NEEDLE + ". Instead it is a way of asking three questions.")
 

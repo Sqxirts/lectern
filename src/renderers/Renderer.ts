@@ -1,12 +1,12 @@
 import { App, TFile } from "obsidian";
-import type { ScopeSettings } from "../settings";
+import type { LecternSettings } from "../settings";
 
 export interface RenderContext {
 	app: App;
 	file: TFile;
 	/** The zoomable content area. Renderers own everything inside it. */
 	container: HTMLElement;
-	settings: ScopeSettings;
+	settings: LecternSettings;
 	/** Renderers call this when their own state changes the toolbar. */
 	refreshToolbar: () => void;
 }

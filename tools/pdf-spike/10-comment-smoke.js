@@ -2,8 +2,8 @@
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const results = {};
 for (const [name, path, selector] of [
-  ["code", "Attachments/vault-scope-test/fixture-code.py", '[data-scope-kind="code"]'],
-  ["pptx", "Attachments/vault-scope-test/fixture-deck.pptx", '[data-scope-kind="pptx"]'],
+  ["code", "Attachments/lectern-test/fixture-code.py", '[data-scope-kind="code"]'],
+  ["pptx", "Attachments/lectern-test/fixture-deck.pptx", '[data-scope-kind="pptx"]'],
 ]) {
   const r = (results[name] = {});
   const leaf = app.workspace.getLeaf("tab");
@@ -22,17 +22,17 @@ for (const [name, path, selector] of [
   const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
   r.selected = sel.toString();
 
-  r.commandRan = app.commands.executeCommandById("vault-scope:comment-on-selection");
+  r.commandRan = app.commands.executeCommandById("lectern:comment-on-selection");
   await sleep(300);
-  const draft = view.containerEl.querySelector(".vault-scope-card.is-draft textarea");
+  const draft = view.containerEl.querySelector(".lectern-card.is-draft textarea");
   r.draftOpened = !!draft;
   draft.value = `smoke ${name}`;
-  view.containerEl.querySelector(".vault-scope-card.is-draft button.mod-cta").click();
+  view.containerEl.querySelector(".lectern-card.is-draft button.mod-cta").click();
   await sleep(800);
 
-  const hl = view.containerEl.querySelectorAll(".vault-scope-highlight");
+  const hl = view.containerEl.querySelectorAll(".lectern-highlight");
   r.highlightText = [...hl].map((h) => h.textContent).join("");
-  r.cards = view.containerEl.querySelectorAll(".vault-scope-card:not(.is-draft)").length;
+  r.cards = view.containerEl.querySelectorAll(".lectern-card:not(.is-draft)").length;
   r.selectionCleared = window.getSelection().rangeCount === 0;
   const notesBtn = [...view.containerEl.querySelectorAll("button")].find((b) => /^Notes/.test(b.textContent));
   r.toolbarNotes = notesBtn?.textContent;
@@ -42,15 +42,15 @@ for (const [name, path, selector] of [
   r.sidecarAnchorKind = /"kind":"(\w+)"/.exec(md)?.[1];
 
   // Resolve: card hides (resolved hidden by default), toolbar count drops.
-  [...view.containerEl.querySelectorAll(".vault-scope-card button")].find((b) => b.textContent === "Resolve").click();
+  [...view.containerEl.querySelectorAll(".lectern-card button")].find((b) => b.textContent === "Resolve").click();
   await sleep(600);
-  r.cardsAfterResolve = view.containerEl.querySelectorAll(".vault-scope-card").length;
+  r.cardsAfterResolve = view.containerEl.querySelectorAll(".lectern-card").length;
   r.toolbarAfterResolve = [...view.containerEl.querySelectorAll("button")].find((b) => /^Notes/.test(b.textContent))?.textContent;
 
   // Reload from disk: still resolved, still placed.
-  app.commands.executeCommandById("vault-scope:reload-comments");
+  app.commands.executeCommandById("lectern:reload-comments");
   await sleep(600);
-  r.highlightsAfterReload = view.containerEl.querySelectorAll(".vault-scope-highlight").length;
+  r.highlightsAfterReload = view.containerEl.querySelectorAll(".lectern-highlight").length;
 
   // Show it again by reopening (status open) through the store path: delete instead.
   const md2 = await app.vault.read(sidecar);

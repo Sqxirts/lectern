@@ -15,8 +15,8 @@ import { readFileSync, writeFileSync } from "fs";
 const [slideHtmlFile, stylesFile, out] = process.argv.slice(2);
 
 const raw = readFileSync(slideHtmlFile, "utf-8");
-const open = raw.match(/<div class="vault-scope-slide"[^>]*>/);
-if (!open) throw new Error(`no .vault-scope-slide in ${slideHtmlFile}`);
+const open = raw.match(/<div class="lectern-slide"[^>]*>/);
+if (!open) throw new Error(`no .lectern-slide in ${slideHtmlFile}`);
 const start = open.index + open[0].length;
 const scriptAt = raw.indexOf("<script>", start);
 const end = raw.lastIndexOf("</div>", scriptAt >= 0 ? scriptAt : raw.length);
@@ -32,12 +32,12 @@ body{--background-primary:#fff;--background-secondary:#f5f5f5;--background-modif
   --text-normal:#222;--text-muted:#666;--text-faint:#999;--text-error:#c00;--font-interface:system-ui;--font-monospace:monospace}
 ${styles}
 </style>
-<div class="vault-scope-container">
-  <div class="vault-scope-wrapper vault-scope-pptx-active">
-    <div class="vault-scope-sizer">
-      <div class="vault-scope-content">
-        <div class="vault-scope-slide-card">
-          <div class="vault-scope-slide-header"><span class="vault-scope-slide-number">Slide ${Number(n)}</span></div>
+<div class="lectern-container">
+  <div class="lectern-wrapper lectern-pptx-active">
+    <div class="lectern-sizer">
+      <div class="lectern-content">
+        <div class="lectern-slide-card">
+          <div class="lectern-slide-header"><span class="lectern-slide-number">Slide ${Number(n)}</span></div>
           ${open[0]}${inner}</div>
         </div>
       </div>

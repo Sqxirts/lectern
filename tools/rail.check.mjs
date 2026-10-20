@@ -1,6 +1,6 @@
 /**
  * Drive the real CommentRail and ZoomController in Chrome, wired the way
- * ScopeView wires them, with the real stylesheet and slide-sized cards.
+ * LecternView wires them, with the real stylesheet and slide-sized cards.
  *
  * Catches two regressions seen 2026-10-12 on a narrow pane:
  * - connectors that ended at the wrong x (card.offsetLeft is relative to the
@@ -32,15 +32,15 @@ const styles = readFileSync(join(root, "styles.css"), "utf-8");
 const page = `<!doctype html><meta charset="utf-8"><style>
 html,body{margin:0;height:100%}
 *{box-sizing:border-box} /* Obsidian's app.css does this globally */
-.vault-scope-slide{background:#eef;position:relative;font:32px monospace}
-.vault-scope-highlight{background:#fc8}
+.lectern-slide{background:#eef;position:relative;font:32px monospace}
+.lectern-highlight{background:#fc8}
 ${styles}
 </style>
-<div class="vault-scope-container" style="height:100vh;display:flex;flex-direction:column">
-  <div class="vault-scope-wrapper vault-scope-pptx-active" style="flex:1">
-    <div class="vault-scope-sizer"><div class="vault-scope-content">
-      ${[1, 2, 3].map((n) => `<div class="vault-scope-slide-card"><div class="vault-scope-slide" style="width:1280px;height:720px">
-        <span style="position:absolute;left:80px;top:${n === 2 ? 120 : 400}px">${n === 2 ? '<span class="vault-scope-highlight" id="hl">#include &lt;string.h&gt;</span>' : "Slide " + n}</span>
+<div class="lectern-container" style="height:100vh;display:flex;flex-direction:column">
+  <div class="lectern-wrapper lectern-pptx-active" style="flex:1">
+    <div class="lectern-sizer"><div class="lectern-content">
+      ${[1, 2, 3].map((n) => `<div class="lectern-slide-card"><div class="lectern-slide" style="width:1280px;height:720px">
+        <span style="position:absolute;left:80px;top:${n === 2 ? 120 : 400}px">${n === 2 ? '<span class="lectern-highlight" id="hl">#include &lt;string.h&gt;</span>' : "Slide " + n}</span>
       </div></div>`).join("")}
     </div></div>
   </div>
@@ -73,30 +73,30 @@ P.createSvg = function (tag, o = {}) {
 };
 ${bundle}
 const q = (s) => document.querySelector(s);
-const wrapper = q(".vault-scope-wrapper"), content = q(".vault-scope-content");
+const wrapper = q(".lectern-wrapper"), content = q(".lectern-content");
 window.rail = new V.CommentRail(wrapper, content, {}, false);
-window.zoom = new V.ZoomController(wrapper, q(".vault-scope-sizer"), content, q(".ind"), () => rail.layout());
-// Same observers as ScopeView.watchLayout.
+window.zoom = new V.ZoomController(wrapper, q(".lectern-sizer"), content, q(".ind"), () => rail.layout());
+// Same observers as LecternView.watchLayout.
 const ro = new ResizeObserver(() => { zoom.measure(); rail.layout(); });
 ro.observe(content);
 ro.observe(wrapper);
 wrapper.addEventListener("scroll", () => rail.onScroll(), { passive: true });
 zoom.measure();
 rail.setComments([{ comment: { id: "c1", body: "Needed for assignment #5", status: "open", created: "2026-10-08T12:46" }, elements: [q("#hl")], orphaned: false }]);
-// ScopeView fits once the rail has taken (or declined) its strip.
+// LecternView fits once the rail has taken (or declined) its strip.
 if (zoom.overflowsWidth) zoom.fitToWidth();
 q("#hl").scrollIntoView({ block: "center" });
 </script>`;
 
 const state = (tab) =>
 	tab.evaluate(() => {
-		const w = document.querySelector(".vault-scope-wrapper");
+		const w = document.querySelector(".lectern-wrapper");
 		const wrap = w.getBoundingClientRect();
-		const slide = document.querySelector(".vault-scope-slide").getBoundingClientRect();
+		const slide = document.querySelector(".lectern-slide").getBoundingClientRect();
 		const hl = document.querySelector("#hl").getBoundingClientRect();
-		const card = document.querySelector(".vault-scope-card").getBoundingClientRect();
-		const svg = document.querySelector(".vault-scope-connectors").getBoundingClientRect();
-		const path = document.querySelector(".vault-scope-connector");
+		const card = document.querySelector(".lectern-card").getBoundingClientRect();
+		const svg = document.querySelector(".lectern-connectors").getBoundingClientRect();
+		const path = document.querySelector(".lectern-connector");
 		let line = null;
 		if (path) {
 			const n = path.getAttribute("d").match(/-?[\d.]+/g).map(Number);
@@ -111,7 +111,7 @@ const state = (tab) =>
 			zoom: +zoom.value.toFixed(2),
 			hasRail: w.classList.contains("has-rail"),
 			slideW: r(slide.width),
-			paths: document.querySelectorAll(".vault-scope-connector").length,
+			paths: document.querySelectorAll(".lectern-connector").length,
 			slideCentreOffPane: r((slide.left + slide.right) / 2 - (wrap.left + w.clientWidth / 2)),
 			slideCentreOffUsable: r((slide.left + slide.right) / 2 - (usableLeft + usableRight) / 2),
 			cardOverlapsSlide: card.left < slide.right - 1 && card.right > slide.left + 1,

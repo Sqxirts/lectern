@@ -39,18 +39,18 @@ export class PptxRenderer extends Renderer {
 		this.slideEls = [];
 
 		if (slidesHtml.length === 0) {
-			this.ctx.container.createDiv({ cls: "vault-scope-empty", text: "This presentation has no slides." });
+			this.ctx.container.createDiv({ cls: "lectern-empty", text: "This presentation has no slides." });
 			return;
 		}
 
 		slidesHtml.forEach((html, index) => {
 			const slideNumber = index + 1;
-			const card = this.ctx.container.createDiv({ cls: "vault-scope-slide-card" });
+			const card = this.ctx.container.createDiv({ cls: "lectern-slide-card" });
 
-			const header = card.createDiv({ cls: "vault-scope-slide-header" });
-			header.createSpan({ cls: "vault-scope-slide-number", text: `Slide ${slideNumber}` });
+			const header = card.createDiv({ cls: "lectern-slide-header" });
+			header.createSpan({ cls: "lectern-slide-number", text: `Slide ${slideNumber}` });
 
-			const stage = card.createDiv({ cls: "vault-scope-slide" });
+			const stage = card.createDiv({ cls: "lectern-slide" });
 			// Size the frame from the deck's own <p:sldSz>, not from whatever
 			// the renderer happened to emit. They agree for a 16:9 deck and
 			// diverge for 4:3 or a custom page size.
@@ -66,9 +66,9 @@ export class PptxRenderer extends Renderer {
 
 			const notes = this.slides[index]?.notes ?? [];
 			if (notes.length > 0) {
-				const panel = card.createDiv({ cls: "vault-scope-slide-notes" });
+				const panel = card.createDiv({ cls: "lectern-slide-notes" });
 				panel.toggleClass("is-hidden", !this.notesVisible);
-				panel.createDiv({ cls: "vault-scope-slide-notes-label", text: "Speaker notes" });
+				panel.createDiv({ cls: "lectern-slide-notes-label", text: "Speaker notes" });
 				for (const paragraph of notes) {
 					panel.createEl("p", { text: paragraph });
 				}
@@ -100,12 +100,12 @@ export class PptxRenderer extends Renderer {
 	 * on screen rather than always the first.
 	 */
 	private watchVisibleSlide(): void {
-		// The scroller is .vault-scope-wrapper, two levels up: container is
-		// .vault-scope-content inside .vault-scope-sizer. Rooting the observer
+		// The scroller is .lectern-wrapper, two levels up: container is
+		// .lectern-content inside .lectern-sizer. Rooting the observer
 		// at the sizer, as this used to, reports every slide as fully visible
 		// because the sizer is as tall as all of them, so every ratio ties at 1,
 		// the first slide always wins and "Copy slide" only ever copied slide 1.
-		const scrollRoot = this.ctx.container.closest(".vault-scope-wrapper");
+		const scrollRoot = this.ctx.container.closest(".lectern-wrapper");
 		if (!scrollRoot) return;
 
 		const ratios = new Map<number, number>();
@@ -153,7 +153,7 @@ export class PptxRenderer extends Renderer {
 	private toggleNotes(): void {
 		this.notesVisible = !this.notesVisible;
 		this.ctx.container
-			.querySelectorAll<HTMLElement>(".vault-scope-slide-notes")
+			.querySelectorAll<HTMLElement>(".lectern-slide-notes")
 			.forEach((panel) => panel.toggleClass("is-hidden", !this.notesVisible));
 		this.ctx.refreshToolbar();
 	}
@@ -193,7 +193,7 @@ export class PptxRenderer extends Renderer {
 	}
 
 	wrapperClass(): string | null {
-		return "vault-scope-pptx-active";
+		return "lectern-pptx-active";
 	}
 
 	destroy(): void {

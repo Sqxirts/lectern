@@ -1,4 +1,4 @@
-/** Build a PowerPoint-vs-VaultScope image for the given slides. */
+/** Build a PowerPoint-vs-Lectern image for the given slides. */
 import { chromium } from "playwright";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
@@ -14,7 +14,7 @@ const browser = await chromium.launch({ channel: "chrome" });
 for (const n of slides) {
   const nn = String(n).padStart(2, "0");
   const ourHtml = readFileSync(join(oursDir, `slide-${nn}.html`), "utf-8")
-    .replace("</style>", ".vault-scope-slide *:not(:has(img)){overflow:visible !important}</style>");
+    .replace("</style>", ".lectern-slide *:not(:has(img)){overflow:visible !important}</style>");
   const truth = readFileSync(join(truthDir, `slide-${nn}.png`)).toString("base64");
 
   const page = await browser.newPage({ viewport: { width: 1320, height: 800 } });
@@ -22,7 +22,7 @@ for (const n of slides) {
   writeFileSync(join(outDir, `tmp-${nn}.html`), ourHtml, "utf-8");
   await page.goto(pathToFileURL(join(outDir, `tmp-${nn}.html`)).href);
   await page.waitForTimeout(150);
-  const shot = await page.locator(".vault-scope-slide").screenshot();
+  const shot = await page.locator(".lectern-slide").screenshot();
   await page.close();
 
   // Stack PowerPoint's export above ours, labelled.
@@ -34,7 +34,7 @@ for (const n of slides) {
   </style>
   <div class="row"><div class="lab">POWERPOINT (ground truth) - slide ${n}</div>
     <img src="data:image/png;base64,${truth}"></div>
-  <div class="row"><div class="lab">VAULT SCOPE (html renderer) - slide ${n}</div>
+  <div class="row"><div class="lab">LECTERN (html renderer) - slide ${n}</div>
     <img src="data:image/png;base64,${shot.toString("base64")}"></div>`;
 
   const cmp = await browser.newPage({ viewport: { width: 1320, height: 1560 } });

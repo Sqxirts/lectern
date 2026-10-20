@@ -22,7 +22,7 @@ const LAYOUT_PASSES = execFileSync("npx", ["esbuild", "--bundle", "--format=iife
 	cwd: join(__dirname, ".."),
 	input: `import { repairCollapsedShapes } from "./src/pptx/thinShapes";
 		import { applyTabStops } from "./src/pptx/tabStops";
-		const slide = document.querySelector(".vault-scope-slide");
+		const slide = document.querySelector(".lectern-slide");
 		repairCollapsedShapes(slide);
 		applyTabStops(slide);`,
 	shell: true,
@@ -91,8 +91,8 @@ describe("render", () => {
 			const page = `<!doctype html><meta charset="utf-8"><style>
 				html,body{margin:0;padding:0;background:#fff}
 ${STYLES}
-				.vault-scope-slide{box-shadow:none}
-			</style><div class="vault-scope-slide" style="width:${size.width}px;height:${size.height}px">${html}</div><script>${LAYOUT_PASSES}</script>`;
+				.lectern-slide{box-shadow:none}
+			</style><div class="lectern-slide" style="width:${size.width}px;height:${size.height}px">${html}</div><script>${LAYOUT_PASSES}</script>`;
 
 			writeFileSync(join(OUT, `slide-${String(i + 1).padStart(2, "0")}.html`), page, "utf-8");
 		});

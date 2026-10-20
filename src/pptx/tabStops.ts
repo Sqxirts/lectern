@@ -16,7 +16,7 @@
  */
 
 /** A tab, as a box this pass can widen. textApply.ts renders them. */
-export const TAB_CLASS = "vault-scope-tab";
+export const TAB_CLASS = "lectern-tab";
 
 /** A stop counts as "reached" within half a pixel, so a tab exactly at a stop moves on. */
 const EPSILON_PX = 0.5;
@@ -33,7 +33,7 @@ export function nextStop(x: number, custom: number[], hang: number | null, defau
 export function applyTabStops(root: HTMLElement): number {
 	let sized = 0;
 
-	for (const p of Array.from(root.querySelectorAll<HTMLElement>(".vault-scope-p"))) {
+	for (const p of Array.from(root.querySelectorAll<HTMLElement>(".lectern-p"))) {
 		const tabs = Array.from(p.querySelectorAll<HTMLElement>(`.${TAB_CLASS}`));
 		if (!tabs.length) continue;
 

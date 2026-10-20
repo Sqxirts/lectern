@@ -93,7 +93,7 @@ export async function metafileToPngDataUrl(bytes: Uint8Array): Promise<string | 
 		const { writeFile, readFile, mkdtemp } = fs;
 		rm = fs.rm;
 
-		dir = await mkdtemp(join(tmpdir(), "vault-scope-emf-"));
+		dir = await mkdtemp(join(tmpdir(), "lectern-emf-"));
 		const src = join(dir, "in.bin");
 		const dst = join(dir, "out.png");
 		await writeFile(src, bytes);
@@ -120,7 +120,7 @@ export async function metafileToPngDataUrl(bytes: Uint8Array): Promise<string | 
 		const png = await readFile(dst);
 		return `data:image/png;base64,${png.toString("base64")}`;
 	} catch (error) {
-		console.warn("[vault-scope] metafile conversion failed", error);
+		console.warn("[lectern] metafile conversion failed", error);
 		return null;
 	} finally {
 		if (dir && rm) await rm(dir, { recursive: true, force: true }).catch(() => undefined);
@@ -163,7 +163,7 @@ export async function repairMetafileImages(root: HTMLElement): Promise<number> {
 			} catch (error) {
 				// Never let one image's failure reject the whole pass: the rest
 				// still deserve their conversion or their placeholder.
-				console.warn("[vault-scope] metafile conversion threw", error);
+				console.warn("[lectern] metafile conversion threw", error);
 			}
 
 			if (png) {
@@ -174,7 +174,7 @@ export async function repairMetafileImages(root: HTMLElement): Promise<number> {
 
 			// Nothing to show, so say what it is instead of leaving a broken icon.
 			const note = img.ownerDocument.createElement("span");
-			note.className = "vault-scope-metafile-missing";
+			note.className = "lectern-metafile-missing";
 			note.textContent = `${kind.toUpperCase()} vector image`;
 			note.title = `This slide uses a Windows ${kind.toUpperCase()} metafile, which browsers cannot display.`;
 			img.replaceWith(note);
@@ -182,7 +182,7 @@ export async function repairMetafileImages(root: HTMLElement): Promise<number> {
 	);
 
 	if (found > 0) {
-		console.info(`[vault-scope] metafiles: ${found} found, ${repaired} converted`);
+		console.info(`[lectern] metafiles: ${found} found, ${repaired} converted`);
 	}
 	return repaired;
 }

@@ -25,7 +25,7 @@ export function patchPdfContextMenu(findController: (target: Element) => PdfComm
 				addHighlightItem(this, evt, findController);
 			} catch (error) {
 				// Never let our item break the viewer's own menu.
-				console.error("[vault-scope] PDF context menu", error);
+				console.error("[lectern] PDF context menu", error);
 			}
 		}
 		return original.call(this, evt);

@@ -1,15 +1,15 @@
 import { renderAsync } from "docx-preview";
 import { Renderer } from "./Renderer";
 
-const PAGE_CLASS = "vault-scope-docx-page";
+const PAGE_CLASS = "lectern-docx-page";
 
 export class DocxRenderer extends Renderer {
 	async render(): Promise<void> {
 		const buffer = await this.ctx.app.vault.readBinary(this.ctx.file);
 
 		this.ctx.container.empty();
-		const styleHost = this.ctx.container.createDiv({ cls: "vault-scope-docx-styles" });
-		const body = this.ctx.container.createDiv({ cls: "vault-scope-docx-body" });
+		const styleHost = this.ctx.container.createDiv({ cls: "lectern-docx-styles" });
+		const body = this.ctx.container.createDiv({ cls: "lectern-docx-body" });
 
 		await renderAsync(buffer, body, styleHost, {
 			className: PAGE_CLASS,
@@ -45,6 +45,6 @@ export class DocxRenderer extends Renderer {
 	}
 
 	wrapperClass(): string | null {
-		return "vault-scope-docx-active";
+		return "lectern-docx-active";
 	}
 }

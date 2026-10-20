@@ -64,7 +64,7 @@ New `src/pdf/PdfHighlightLayer.ts`. On each `textlayerrendered` for a page that 
 
 - Build a DOM `Range` from the resolved item indices over `textLayer.textDivs`.
 - `range.getClientRects()`, convert to page-relative boxes, merge boxes on the same line.
-- Append absolutely positioned divs to a `.vault-scope-pdf-highlights` layer inside the page div, under the text layer so selection still works. `mix-blend-mode: multiply` in light theme, `screen` in dark.
+- Append absolutely positioned divs to a `.lectern-pdf-highlights` layer inside the page div, under the text layer so selection still works. `mix-blend-mode: multiply` in light theme, `screen` in dark.
 - Position boxes in **percent of the layer box**, measured from the layer's own `getBoundingClientRect()` (not the page div's, which includes its border). Percent units keep boxes on the text during PDF.js's CSS-only zoom, before the text layer is re-rendered.
 
 PDF.js throws the text layer away and rebuilds it on zoom and when a page scrolls far off and back. The event fires again each time, so we simply redraw. Nothing is cached in pixel units.
@@ -75,21 +75,21 @@ Before the text layer exists, a comment still needs a vertical position for its 
 
 **Padding the scroller does not work** (spike, phase A). `clientWidth` includes padding, so PDF.js's page-width fit ignores it and the page runs under the rail.
 
-**Narrow the scroller instead**, then call `child.onResize()`. Set `.pdf-viewer-container` to `width: calc(100% - var(--vault-scope-rail-width) - 32px)` while there are comments to show, and call `child.onResize()` after every toggle. PDF.js then refits into the narrower box, and Obsidian's own resize observer keeps it fitted on later pane resizes.
+**Narrow the scroller instead**, then call `child.onResize()`. Set `.pdf-viewer-container` to `width: calc(100% - var(--lectern-rail-width) - 32px)` while there are comments to show, and call `child.onResize()` after every toggle. PDF.js then refits into the narrower box, and Obsidian's own resize observer keeps it fitted on later pane resizes.
 
-Consequence for `CommentRail`: the rail can no longer live *inside* the scroller (it would be clipped), so it sits in the freed strip as a sibling of the scroller. Today's rail scrolls with the content because it is inside the wrapper. Add a mode where the rail is outside, and on the scroller's `scroll` event it translates its card layer by `-scrollTop`. Connectors become one SVG over both the scroller and the strip, recomputed on scroll. Keep that change inside `CommentRail` behind a constructor option, so `ScopeView` is untouched.
+Consequence for `CommentRail`: the rail can no longer live *inside* the scroller (it would be clipped), so it sits in the freed strip as a sibling of the scroller. Today's rail scrolls with the content because it is inside the wrapper. Add a mode where the rail is outside, and on the scroller's `scroll` event it translates its card layer by `-scrollTop`. Connectors become one SVG over both the scroller and the strip, recomputed on scroll. Keep that change inside `CommentRail` behind a constructor option, so `LecternView` is untouched.
 
 The sidebar-list fallback is no longer needed.
 
 ### 5. Glue
 
-New `src/pdf/PdfCommentController.ts`, one per open PDF leaf. It owns the store, rail, layer and event subscriptions, and implements `RailDelegate`. Most of `ScopeView`'s comment methods (`commitDraft`, `saveBody`, `setStatus`, `deleteComment`, `openSidecar`, `reloadComments`) move into a shared base or helper so both classes use them. Do that extraction as its own commit, with existing tests green, before adding PDF code.
+New `src/pdf/PdfCommentController.ts`, one per open PDF leaf. It owns the store, rail, layer and event subscriptions, and implements `RailDelegate`. Most of `LecternView`'s comment methods (`commitDraft`, `saveBody`, `setStatus`, `deleteComment`, `openSidecar`, `reloadComments`) move into a shared base or helper so both classes use them. Do that extraction as its own commit, with existing tests green, before adding PDF code.
 
 `main.ts`:
 
 - On `layout-change` and `file-open`, attach a controller to every `"pdf"` leaf that lacks one. Poll briefly for `viewer.child.pdfViewer`, because it appears after the file loads.
 - Detach on leaf close or file change.
-- The `comment-on-selection`, `open-comment-note` and `reload-comments` commands accept either a `ScopeView` or a PDF controller for the active leaf.
+- The `comment-on-selection`, `open-comment-note` and `reload-comments` commands accept either a `LecternView` or a PDF controller for the active leaf.
 - Setting "Comments on PDFs" (default on). Off means no attachment at all.
 
 `NEVER_REGISTER` keeps `pdf`. We never take the extension from Obsidian.
@@ -99,7 +99,7 @@ New `src/pdf/PdfCommentController.ts`, one per open PDF leaf. It owns the store,
 Each step ends with `npm run build`, `npm test`, and a manual check on a real course PDF.
 
 1. ~~Spike.~~ Done 2026-10-07, passed. See "Spike results".
-2. ~~Extract shared comment logic out of `ScopeView`.~~ Done 2026-10-07: `src/comments/CommentSession.ts`, Obsidian-free with the store, rail and notices injected, 13 unit tests. Verified end to end in the live app on the code and pptx fixtures by `tools/pdf-spike/10-comment-smoke.js`.
+2. ~~Extract shared comment logic out of `LecternView`.~~ Done 2026-10-07: `src/comments/CommentSession.ts`, Obsidian-free with the store, rail and notices injected, 13 unit tests. Verified end to end in the live app on the code and pptx fixtures by `tools/pdf-spike/10-comment-smoke.js`.
 3. ~~`PdfAnchor` + `pdfAnchoring.ts` + tests.~~ Done 2026-10-07. `src/pdf/pdfAnchoring.ts`: `PdfPageText` (items joined with a newline after each `hasEOL` item, offsets to and from item indices), `buildPdfAnchor`, and `resolvePdfAnchor`. Its fallback order is: stored indices if they still cover the quote, then context, then quote, then other pages nearest first, then orphaned. 18 tests. The context step also found two bugs in the shared matcher, now fixed for slides, docs and code too:
    - `looseIndexOf(text, needle, from)` ignored `from` on its whitespace-tolerant fallback.
    - The context step searched for the quote *from* the context match. The exact-match path runs first, so a cleanly typed copy of the quote further down beat the line-wrapped copy inside the match. It now searches *within* the match (`looseIndexWithin`). Both have regression tests that fail without the fix.
@@ -114,7 +114,7 @@ Each step ends with `npm run build`, `npm test`, and a manual check on a real co
 
 ## Spike results (2026-10-07)
 
-Run against the live Obsidian 1.14.4 on `squirtle-pad`, started with `--remote-debugging-port=9229` and driven over CDP by Playwright. Test file: `CYBR 310 - Syllabus (original PDF).pdf` (8 pages). The scripts are in `tools/pdf-spike/` (`cdp.mjs` runs any of the numbered snippets in the Obsidian window). The spike changed nothing in the plugin. It added DOM from outside and removed it afterwards.
+Run against the live Obsidian 1.14.4 on a Windows desktop, started with `--remote-debugging-port=9229` and driven over CDP by Playwright. Test file: `CYBR 310 - Syllabus (original PDF).pdf` (8 pages). The scripts are in `tools/pdf-spike/` (`cdp.mjs` runs any of the numbered snippets in the Obsidian window). The spike changed nothing in the plugin. It added DOM from outside and removed it afterwards.
 
 | Question | Result |
 |---|---|
@@ -140,7 +140,7 @@ Run against the live Obsidian 1.14.4 on `squirtle-pad`, started with `--remote-d
 Three bugs only the live run could show, all fixed:
 
 1. **`createSvg` throws on a space-separated `cls`.** It adds the string as one class token, and SVG elements reject one containing a space. `createDiv` assigns `className`, which is why the same string worked there. Pass an array. A failed start also left the strip in the page, so `attach` now destroys the controller if `start` throws.
-2. **CSS variables were scoped to `.vault-scope-container`.** The PDF pieces live outside it, so the boxes, connectors and card accent rendered with no colour. The measurements all passed; only the screenshot showed it. The variables now go on the PDF elements too.
+2. **CSS variables were scoped to `.lectern-container`.** The PDF pieces live outside it, so the boxes, connectors and card accent rendered with no colour. The measurements all passed; only the screenshot showed it. The variables now go on the PDF elements too.
 3. **PDF.js evicts far-off pages by emptying their div, and fires no event.** That took a marker with it, which read as top 0 and pulled its card to the top of the rail. Fix: on scroll and resize, redraw any comment whose element `isConnected` is false.
 
 ## Risks and limits

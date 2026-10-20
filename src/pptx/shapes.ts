@@ -435,7 +435,7 @@ function buildLineSvg(art: ShapeArtModel, line: NonNullable<ShapeArtModel["line"
 	const bw = Math.max(w, 1);
 	const bh = Math.max(h, 1);
 	svg.setAttribute("viewBox", `0 0 ${fmt(bw)} ${fmt(bh)}`);
-	svg.classList.add("vault-scope-shape");
+	svg.classList.add("lectern-shape");
 	Object.assign(svg.style, {
 		position: "absolute",
 		left: `${x}px`,
@@ -491,7 +491,7 @@ function buildSvg(art: ShapeArtModel, zIndex: string): SVGSVGElement {
 	const { x, y, w, h } = art.rectPx;
 	svg.setAttribute("viewBox", `0 0 ${fmt(Math.max(w, 0.01))} ${fmt(Math.max(h, 0.01))}`);
 	svg.setAttribute("preserveAspectRatio", "none");
-	svg.classList.add("vault-scope-shape");
+	svg.classList.add("lectern-shape");
 	Object.assign(svg.style, {
 		position: "absolute",
 		left: `${x}px`,
@@ -562,7 +562,7 @@ function renderedShapes(slide: HTMLElement): (HTMLElement | SVGElement)[] {
 			el.style.position === "absolute" &&
 			!(el.textContent ?? "").trim() &&
 			!el.querySelector("img, table") &&
-			!el.classList.contains("vault-scope-shape") &&
+			!el.classList.contains("lectern-shape") &&
 			el.style.zIndex !== "-1"
 	);
 }

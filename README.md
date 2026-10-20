@@ -1,4 +1,4 @@
-# Vault Scope
+# Lectern
 
 An Obsidian plugin that previews Office and code files, lets you **copy text out of PowerPoint slides**, and adds **Word-style margin comments** stored as plain markdown in your vault. The comments work on PDFs too, inside Obsidian's own PDF viewer.
 
@@ -6,7 +6,7 @@ An Obsidian plugin that previews Office and code files, lets you **copy text out
 
 Existing preview plugins render `.pptx` slides to an HTML5 canvas. Canvas output is pixels: there are no text nodes, so nothing can be selected, Ctrl+F finds nothing, and screen readers read nothing.
 
-Vault Scope renders slides to real DOM instead. Selection and copy then work with no special handling, because the text is actually text.
+Lectern renders slides to real DOM instead. Selection and copy then work with no special handling, because the text is actually text.
 
 ## Features
 
@@ -31,6 +31,7 @@ Vault Scope renders slides to real DOM instead. Selection and copy then work wit
 **PDF comments**
 - The same comments on PDFs, in Obsidian's built-in PDF viewer, with no separate viewer to switch to
 - Select text, `Ctrl+Alt+M`: an amber highlight, a card in a margin strip, a connector, the same sidecar note
+- Or right-click the selection and pick **Highlight and comment**, next to Copy / Copy as quote
 - Page links, search, thumbnails and "Copy link to selection" keep working, because the viewer is Obsidian's own
 - The PDF file is never written to
 - Toggle with "Comments on PDFs" in settings
@@ -84,28 +85,28 @@ A PDF anchor stores two addresses for the same text:
 
 ## Install
 
-**From a release:** download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/Sqxirts/vault-scope/releases/latest) into `<your vault>/.obsidian/plugins/vault-scope/`, then fully quit and reopen Obsidian and enable it under Community plugins. 0.2.0 is the first release with the slide-fidelity work and PDF comments.
+**From a release:** download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/Sqxirts/lectern/releases/latest) into `<your vault>/.obsidian/plugins/lectern/`, then fully quit and reopen Obsidian and enable it under Community plugins. 0.2.0 is the first release with the slide-fidelity work and PDF comments.
 
 **From source:**
 
 ```bash
-git clone https://github.com/Sqxirts/vault-scope.git
-cd vault-scope
+git clone https://github.com/Sqxirts/lectern.git
+cd lectern
 npm install
 npm approve-scripts esbuild   # npm blocks postinstall scripts by default
 cp .env.example .env.local    # then edit it to point at your vault
 npm run build
 ```
 
-Set `VAULT_SCOPE_OUT` in `.env.local` to your vault's plugin folder:
+Set `LECTERN_OUT` in `.env.local` to your vault's plugin folder:
 
 ```
-VAULT_SCOPE_OUT=C:/path/to/YourVault/.obsidian/plugins/vault-scope
+LECTERN_OUT=C:/path/to/YourVault/.obsidian/plugins/lectern
 ```
 
 Without it the build goes to `./dist` and you can copy `main.js`, `manifest.json` and `styles.css` across by hand.
 
-Then **fully quit and reopen Obsidian**. Registering a new view type only happens at startup, so a plugin reload is not enough. Enable Vault Scope under Settings, Community plugins.
+Then **fully quit and reopen Obsidian**. Registering a new view type only happens at startup, so a plugin reload is not enough. Enable Lectern under Settings, Community plugins.
 
 ## Development
 
@@ -131,7 +132,7 @@ One `FileView` subclass owns the chrome (toolbar, zoom, comment rail) and delega
 ```
 src/
   main.ts                 plugin entry: views, extensions, commands
-  view/ScopeView.ts       the FileView, orchestrates everything
+  view/LecternView.ts       the FileView, orchestrates everything
   view/Toolbar.ts         toolbar rendering
   view/ZoomController.ts  transform-based zoom, pan, sizer sync
   renderers/              one per file kind, behind a shared interface
@@ -140,7 +141,7 @@ src/
   comments/CommentStore.ts   vault I/O for the sidecar
   comments/sidecarFormat.ts  the markdown format, no Obsidian imports
   comments/CommentRail.ts    margin cards and connectors
-  comments/CommentSession.ts the comment workflow, shared by ScopeView and PDF tabs
+  comments/CommentSession.ts the comment workflow, shared by LecternView and PDF tabs
   pdf/                    PDF comments inside Obsidian's own viewer (see below)
   util/safeHtml.ts        sanitise renderer HTML before inserting it
 ```
@@ -151,7 +152,7 @@ Anchor scoping contract: any element a comment can attach inside carries `data-s
 
 ### PDF comments
 
-PDFs are not opened by Vault Scope. Obsidian's PDF viewer keeps them, and `PdfCommentManager` attaches one `PdfCommentController` to each open PDF tab:
+PDFs are not opened by Lectern. Obsidian's PDF viewer keeps them, and `PdfCommentManager` attaches one `PdfCommentController` to each open PDF tab:
 
 ```
 pdf/pdfInternals.ts        one probe for every private Obsidian / PDF.js field used
@@ -181,7 +182,7 @@ Two PDF.js behaviours shape the code:
 - Commenting on code files is read-mode only. A highlight span cannot live inside a `<textarea>`.
 - PDF comments need a text layer. Scanned PDFs have nothing to select. One comment cannot span two pages. PDF embeds inside notes (`![[x.pdf]]`) are not covered.
 - Spreadsheets are capped at 5,000 rows and 256 columns per sheet.
-- If another preview plugin claims the same extensions, Vault Scope skips those it cannot register. Per-extension toggles are in settings.
+- If another preview plugin claims the same extensions, Lectern skips those it cannot register. Per-extension toggles are in settings.
 
 ## Dependencies
 

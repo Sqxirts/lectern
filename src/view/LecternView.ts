@@ -1,6 +1,6 @@
 import { FileView, Notice, TFile, WorkspaceLeaf } from "obsidian";
-import { VIEW_TYPE_SCOPE, classify, type FileKind } from "../constants";
-import type { ScopeSettings } from "../settings";
+import { VIEW_TYPE_LECTERN, classify, type FileKind } from "../constants";
+import type { LecternSettings } from "../settings";
 import { Renderer, type RenderContext, type ToolbarItem } from "../renderers/Renderer";
 import { CodeRenderer } from "../renderers/CodeRenderer";
 import { DocxRenderer } from "../renderers/DocxRenderer";
@@ -14,8 +14,8 @@ import { CommentSession, type CommentHost } from "../comments/CommentSession";
 import { buildAnchor, clearHighlights, resolveAnchor } from "../comments/anchoring";
 import type { PlacedComment, ScopeComment } from "../comments/types";
 
-export class ScopeView extends FileView {
-	private settings: ScopeSettings;
+export class LecternView extends FileView {
+	private settings: LecternSettings;
 
 	private toolbar!: Toolbar;
 	private wrapper!: HTMLElement;
@@ -37,17 +37,17 @@ export class ScopeView extends FileView {
 	 */
 	private loadGen = 0;
 
-	constructor(leaf: WorkspaceLeaf, settings: ScopeSettings) {
+	constructor(leaf: WorkspaceLeaf, settings: LecternSettings) {
 		super(leaf);
 		this.settings = settings;
 	}
 
 	getViewType(): string {
-		return VIEW_TYPE_SCOPE;
+		return VIEW_TYPE_LECTERN;
 	}
 
 	getDisplayText(): string {
-		return this.file?.basename ?? "Vault Scope";
+		return this.file?.basename ?? "Lectern";
 	}
 
 	getIcon(): string {
@@ -62,8 +62,8 @@ export class ScopeView extends FileView {
 		const kind = classify(file.extension);
 		if (kind === "unsupported") {
 			this.content.createDiv({
-				cls: "vault-scope-error",
-				text: `Vault Scope does not handle .${file.extension} files.`,
+				cls: "lectern-error",
+				text: `Lectern does not handle .${file.extension} files.`,
 			});
 			return;
 		}
@@ -85,8 +85,8 @@ export class ScopeView extends FileView {
 			if (stale()) return;
 			const message = error instanceof Error ? error.message : String(error);
 			this.content.empty();
-			this.content.createDiv({ cls: "vault-scope-error", text: `Could not open this file: ${message}` });
-			console.error("[vault-scope] render failed", error);
+			this.content.createDiv({ cls: "lectern-error", text: `Could not open this file: ${message}` });
+			console.error("[lectern] render failed", error);
 			return;
 		}
 		if (stale() || !this.renderer) return;
@@ -164,15 +164,15 @@ export class ScopeView extends FileView {
 	private buildChrome(): void {
 		this.teardown();
 		this.contentEl.empty();
-		this.contentEl.addClass("vault-scope-container");
+		this.contentEl.addClass("lectern-container");
 
 		this.toolbar = new Toolbar(this.contentEl);
 
-		this.wrapper = this.contentEl.createDiv({ cls: "vault-scope-wrapper" });
-		this.sizer = this.wrapper.createDiv({ cls: "vault-scope-sizer" });
-		this.content = this.sizer.createDiv({ cls: "vault-scope-content" });
+		this.wrapper = this.contentEl.createDiv({ cls: "lectern-wrapper" });
+		this.sizer = this.wrapper.createDiv({ cls: "lectern-sizer" });
+		this.content = this.sizer.createDiv({ cls: "lectern-content" });
 
-		this.indicator = this.contentEl.createDiv({ cls: "vault-scope-zoom-indicator", text: "100%" });
+		this.indicator = this.contentEl.createDiv({ cls: "lectern-zoom-indicator", text: "100%" });
 
 		this.zoom = new ZoomController(this.wrapper, this.sizer, this.content, this.indicator, () => {
 			this.comments?.layout();

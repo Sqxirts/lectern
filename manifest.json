@@ -1,7 +1,7 @@
 {
-	"id": "vault-scope",
-	"name": "Vault Scope",
-	"version": "0.2.0",
+	"id": "lectern",
+	"name": "Lectern",
+	"version": "0.3.0",
 	"minAppVersion": "1.5.0",
 	"description": "Preview docx/xlsx/pptx and 130+ code files. Selectable pptx text, zoom, edit and save, and Word-style margin comments stored as markdown in your vault, on PDFs too.",
 	"author": "sqxirts",

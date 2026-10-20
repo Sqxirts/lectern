@@ -114,10 +114,10 @@ export async function readCellFills(buffer: ArrayBuffer): Promise<CellFill[][][]
 }
 
 /** Class marking a table whose style the deck never defined. */
-export const UNSTYLED_TABLE_CLASS = "vault-scope-table-unstyled";
+export const UNSTYLED_TABLE_CLASS = "lectern-table-unstyled";
 
 /** Class marking a cell whose fill the deck set directly, so it survives the reset. */
-export const FILLED_CELL_CLASS = "vault-scope-cell-filled";
+export const FILLED_CELL_CLASS = "lectern-cell-filled";
 
 /**
  * Put back the fills a deck set directly on individual cells.

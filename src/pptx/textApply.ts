@@ -45,7 +45,7 @@ function lineHeightCss(p: ParagraphModel): string {
 
 function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 	const el = document.createElement("div");
-	el.className = "vault-scope-p";
+	el.className = "lectern-p";
 	el.style.textAlign = p.align;
 	el.style.paddingLeft = `${p.marginLeftPx}px`;
 	if (p.marginRightPx) el.style.paddingRight = `${p.marginRightPx}px`;
@@ -88,7 +88,7 @@ function buildParagraph(p: ParagraphModel, isFirst: boolean): HTMLElement {
 
 	if (p.bullet) {
 		const b = document.createElement("span");
-		b.className = "vault-scope-bullet";
+		b.className = "lectern-bullet";
 		b.textContent = p.bullet.text;
 		b.style.display = "inline-block";
 		b.style.textIndent = "0";
@@ -145,7 +145,7 @@ function fillBody(target: HTMLElement, body: TextBodyModel): void {
 	target.replaceChildren(frag);
 	target.style.padding = `${body.insetsPx.top}px ${body.insetsPx.right}px ${body.insetsPx.bottom}px ${body.insetsPx.left}px`;
 	target.style.whiteSpace = body.wrap ? "pre-wrap" : "pre";
-	target.classList.add("vault-scope-text");
+	target.classList.add("lectern-text");
 }
 
 const keyOf = (el: Element) => (el.textContent ?? "").replace(/\s+/g, "");

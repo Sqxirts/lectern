@@ -1,6 +1,6 @@
-export const VIEW_TYPE_SCOPE = "vault-scope-view";
+export const VIEW_TYPE_LECTERN = "lectern-view";
 
-export const PLUGIN_NAME = "Vault Scope";
+export const PLUGIN_NAME = "Lectern";
 
 /**
  * Plain-text formats we render with highlight.js and can edit in place, grouped

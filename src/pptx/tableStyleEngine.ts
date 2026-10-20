@@ -267,7 +267,7 @@ export async function readTableCellStyles(buffer: ArrayBuffer): Promise<(StyledT
 	}
 }
 
-export const STYLED_TABLE_CLASS = "vault-scope-table-styled";
+export const STYLED_TABLE_CLASS = "lectern-table-styled";
 
 /**
  * Paint resolved styles onto the renderer's cells. Positional, so it runs

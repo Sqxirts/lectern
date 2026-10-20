@@ -1,11 +1,11 @@
 // Part A: reload the plugin, comment on page 1, check drawing, zoom, comment on page 7.
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const PATH = "Degree/Study-Plans/CYBR310-SecProg1/CYBR 310 - Syllabus (original PDF).pdf";
+const PATH = globalThis.LECTERN_PDF; // set LECTERN_PDF to a vault-relative PDF path before running cdp.mjs
 window.__spikeLeaf?.detach(); window.__e2eLeaf?.detach();
-document.querySelectorAll(".vault-scope-pdf-strip, .vault-scope-pdf-overlay").forEach((n) => n.remove());
-await app.plugins.disablePlugin("vault-scope");
-await app.plugins.enablePlugin("vault-scope");
-const plugin = app.plugins.plugins["vault-scope"];
+document.querySelectorAll(".lectern-pdf-strip, .lectern-pdf-overlay").forEach((n) => n.remove());
+await app.plugins.disablePlugin("lectern");
+await app.plugins.enablePlugin("lectern");
+const plugin = app.plugins.plugins["lectern"];
 const out = {};
 
 const leaf = app.workspace.getLeaf("tab");
@@ -32,28 +32,28 @@ const fits = () => { const p = viewer.getPageView(0).div.getBoundingClientRect()
 
 async function comment(pageNo, body) {
   const s = selectItem(pageNo);
-  app.commands.executeCommandById("vault-scope:comment-on-selection");
+  app.commands.executeCommandById("lectern:comment-on-selection");
   await sleep(500);
-  const draft = leaf.view.containerEl.querySelector(".vault-scope-pdf-strip .vault-scope-card.is-draft textarea");
+  const draft = leaf.view.containerEl.querySelector(".lectern-pdf-strip .lectern-card.is-draft textarea");
   if (!draft) return { ...s, draft: false };
   draft.value = body;
-  leaf.view.containerEl.querySelector(".vault-scope-card.is-draft button.mod-cta").click();
+  leaf.view.containerEl.querySelector(".lectern-card.is-draft button.mod-cta").click();
   await sleep(1200);
   return { ...s, draft: true };
 }
 
 const c1 = await comment(1, "e2e page one");
 out.c1 = { draftOpened: c1.draft, text: c1.text };
-const box = () => viewer.getPageView(0).div.querySelector(".vault-scope-pdf-box");
+const box = () => viewer.getPageView(0).div.querySelector(".lectern-pdf-box");
 const textRect = () => { const pv = viewer.getPageView(0); const r = document.createRange(); r.selectNodeContents(pv.textLayer.textLayer.textDivs[c1.item]); return r.getBoundingClientRect(); };
-const card = () => leaf.view.containerEl.querySelector(".vault-scope-pdf-strip .vault-scope-card:not(.is-draft)");
+const card = () => leaf.view.containerEl.querySelector(".lectern-pdf-strip .lectern-card:not(.is-draft)");
 out.afterC1 = {
-  stripActive: leaf.view.containerEl.querySelector(".vault-scope-pdf-strip").classList.contains("is-active"),
+  stripActive: leaf.view.containerEl.querySelector(".lectern-pdf-strip").classList.contains("is-active"),
   containerRight: container.style.right, scaleWithRail: +viewer.currentScale.toFixed(3), pageFits: fits(),
-  boxes: viewer.getPageView(0).div.querySelectorAll(".vault-scope-pdf-box").length,
+  boxes: viewer.getPageView(0).div.querySelectorAll(".lectern-pdf-box").length,
   boxVsTextPx: box() && err(box().getBoundingClientRect(), textRect()),
   cardTopVsBoxPx: card() && box() && Math.round(card().getBoundingClientRect().top - box().getBoundingClientRect().top),
-  connectors: leaf.view.containerEl.querySelectorAll(".vault-scope-pdf-overlay path").length,
+  connectors: leaf.view.containerEl.querySelectorAll(".lectern-pdf-overlay path").length,
   selectionCleared: window.getSelection().rangeCount === 0,
 };
 const note = app.vault.getAbstractFileByPath(`File-Notes/${PATH.split("/").pop()}.comments.md`);
@@ -68,7 +68,7 @@ viewer.currentScaleValue = "page-width"; await sleep(1200);
 // Second comment on page 7.
 viewer.currentPageNumber = 7; await sleep(1500);
 const c2 = await comment(7, "e2e page seven");
-out.c2 = { draftOpened: c2.draft, text: c2.text, cards: leaf.view.containerEl.querySelectorAll(".vault-scope-pdf-strip .vault-scope-card").length };
+out.c2 = { draftOpened: c2.draft, text: c2.text, cards: leaf.view.containerEl.querySelectorAll(".lectern-pdf-strip .lectern-card").length };
 viewer.currentPageNumber = 1; await sleep(1000);
 container.scrollTop = 0; await sleep(500);
 return out;

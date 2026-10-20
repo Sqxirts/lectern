@@ -100,7 +100,7 @@ describe("applyTextBoxes", () => {
 		const [model] = await readSlideText(buffer);
 		const host = rendered("Hello world");
 		expect(applyTextBoxes(host, model)).toBe(1);
-		const span = host.querySelector(".vault-scope-p span") as HTMLElement;
+		const span = host.querySelector(".lectern-p span") as HTMLElement;
 		expect(span.textContent).toBe("Hello world");
 		expect(span.style.fontWeight).toBe("normal");
 	});
@@ -150,8 +150,8 @@ describe("tab stops", () => {
 		const [model] = await readSlideText(await buildDeck({ slides: [slide(textBox(2, p))] }));
 		const host = rendered("abc");
 		applyTextBoxes(host, model);
-		expect(host.querySelectorAll(".vault-scope-tab")).toHaveLength(2);
-		expect((host.querySelector(".vault-scope-p") as HTMLElement).dataset.tabStops).toBe("30");
+		expect(host.querySelectorAll(".lectern-tab")).toHaveLength(2);
+		expect((host.querySelector(".lectern-p") as HTMLElement).dataset.tabStops).toBe("30");
 	});
 });
 

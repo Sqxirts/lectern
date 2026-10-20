@@ -16,7 +16,7 @@ describe("extractPptxText", () => {
 
 		expect(slides).toHaveLength(5);
 		expect(slides.map((s) => s.index)).toEqual([1, 2, 3, 4, 5]);
-		expect(slides[0].paragraphs.join(" ")).toContain("Vault Scope Fixture Deck");
+		expect(slides[0].paragraphs.join(" ")).toContain("Lectern Fixture Deck");
 	});
 
 	it("pulls table cells out as text", async () => {

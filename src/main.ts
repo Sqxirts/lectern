@@ -1,20 +1,20 @@
 import { Notice, Plugin, TFile } from "obsidian";
-import { ALL_EXTENSIONS, NEVER_REGISTER, PLUGIN_NAME, VIEW_TYPE_SCOPE, classify, migrateExtensions } from "./constants";
-import { DEFAULT_SETTINGS, ScopeSettingTab, type ScopeSettings } from "./settings";
-import { ScopeView } from "./view/ScopeView";
+import { ALL_EXTENSIONS, NEVER_REGISTER, PLUGIN_NAME, VIEW_TYPE_LECTERN, classify, migrateExtensions } from "./constants";
+import { DEFAULT_SETTINGS, LecternSettingTab, type LecternSettings } from "./settings";
+import { LecternView } from "./view/LecternView";
 import { PdfCommentManager } from "./pdf/PdfCommentManager";
 import type { PdfCommentController } from "./pdf/PdfCommentController";
 import { patchPdfContextMenu } from "./pdf/pdfContextMenu";
 
-/** What the comment commands need, from either a Vault Scope view or a PDF tab. */
+/** What the comment commands need, from either a Lectern view or a PDF tab. */
 interface CommentTarget {
 	startComment(): void;
 	openSidecar(): Promise<void>;
 	reloadComments(): Promise<void>;
 }
 
-export default class VaultScopePlugin extends Plugin {
-	settings: ScopeSettings = DEFAULT_SETTINGS;
+export default class LecternPlugin extends Plugin {
+	settings: LecternSettings = DEFAULT_SETTINGS;
 	pdfComments!: PdfCommentManager;
 
 	async onload(): Promise<void> {
@@ -28,14 +28,14 @@ export default class VaultScopePlugin extends Plugin {
 		this.register(() => this.pdfComments.destroyAll());
 		this.register(patchPdfContextMenu((target) => this.pdfControllerFor(target)));
 
-		this.registerView(VIEW_TYPE_SCOPE, (leaf) => new ScopeView(leaf, this.settings));
+		this.registerView(VIEW_TYPE_LECTERN, (leaf) => new LecternView(leaf, this.settings));
 		this.registerFileExtensions();
 
 		this.addRibbonIcon("scan-eye", `Open in ${PLUGIN_NAME}`, () => void this.openActiveFile());
 
 		this.addCommand({
 			id: "open-current-file",
-			name: "Open current file in Vault Scope",
+			name: "Open current file in Lectern",
 			callback: () => void this.openActiveFile(),
 		});
 
@@ -73,7 +73,7 @@ export default class VaultScopePlugin extends Plugin {
 			},
 		});
 
-		this.addSettingTab(new ScopeSettingTab(this.app, this));
+		this.addSettingTab(new LecternSettingTab(this.app, this));
 	}
 
 	/**
@@ -88,19 +88,19 @@ export default class VaultScopePlugin extends Plugin {
 		for (const ext of ALL_EXTENSIONS) {
 			if (!wanted.has(ext) || NEVER_REGISTER.has(ext)) continue;
 			try {
-				this.registerExtensions([ext], VIEW_TYPE_SCOPE);
+				this.registerExtensions([ext], VIEW_TYPE_LECTERN);
 			} catch {
 				skipped.push(ext);
 			}
 		}
 
 		if (skipped.length > 0) {
-			console.info(`[vault-scope] another plugin already handles: ${skipped.join(", ")}`);
+			console.info(`[lectern] another plugin already handles: ${skipped.join(", ")}`);
 		}
 	}
 
 	private activeCommentTarget(): CommentTarget | null {
-		const view = this.app.workspace.getActiveViewOfType(ScopeView);
+		const view = this.app.workspace.getActiveViewOfType(LecternView);
 		if (view) return view;
 		return this.pdfComments.forLeaf(this.app.workspace.getMostRecentLeaf());
 	}
@@ -128,7 +128,7 @@ export default class VaultScopePlugin extends Plugin {
 			return;
 		}
 		const leaf = this.app.workspace.getLeaf(false);
-		await leaf.setViewState({ type: VIEW_TYPE_SCOPE, state: { file: file.path } });
+		await leaf.setViewState({ type: VIEW_TYPE_LECTERN, state: { file: file.path } });
 	}
 
 	async loadSettings(): Promise<void> {

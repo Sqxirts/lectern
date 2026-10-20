@@ -1,15 +1,15 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import type VaultScopePlugin from "./main";
+import type LecternPlugin from "./main";
 import { CODE_EXTENSIONS, CODE_EXTENSION_GROUPS, OFFICE_EXTENSIONS } from "./constants";
 
-export interface ScopeSettings {
+export interface LecternSettings {
 	/** Vault-relative folder that holds the `<file>.comments.md` sidecars. */
 	sidecarFolder: string;
 	/** Zoom a freshly opened file starts at, as a percentage. */
 	defaultZoomPercent: number;
 	/** Whether resolved comments are visible without toggling. */
 	showResolvedByDefault: boolean;
-	/** Extensions Vault Scope claims. Trimmed so it can coexist with other previewers. */
+	/** Extensions Lectern claims. Trimmed so it can coexist with other previewers. */
 	registeredExtensions: string[];
 	/**
 	 * Every extension this vault has been offered, whether or not it is on.
@@ -24,7 +24,7 @@ export interface ScopeSettings {
 	pdfComments: boolean;
 }
 
-export const DEFAULT_SETTINGS: ScopeSettings = {
+export const DEFAULT_SETTINGS: LecternSettings = {
 	sidecarFolder: "File-Notes",
 	defaultZoomPercent: 100,
 	showResolvedByDefault: false,
@@ -35,10 +35,10 @@ export const DEFAULT_SETTINGS: ScopeSettings = {
 };
 
 
-export class ScopeSettingTab extends PluginSettingTab {
-	private plugin: VaultScopePlugin;
+export class LecternSettingTab extends PluginSettingTab {
+	private plugin: LecternPlugin;
 
-	constructor(app: App, plugin: VaultScopePlugin) {
+	constructor(app: App, plugin: LecternPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -112,7 +112,7 @@ export class ScopeSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("File types").setHeading();
 
 		containerEl.createEl("p", {
-			text: "Which extensions Vault Scope opens. Turn one off to leave it to another plugin. Changes take effect after Obsidian restarts.",
+			text: "Which extensions Lectern opens. Turn one off to leave it to another plugin. Changes take effect after Obsidian restarts.",
 			cls: "setting-item-description",
 		});
 
@@ -141,9 +141,9 @@ export class ScopeSettingTab extends PluginSettingTab {
 			})
 		);
 
-		const grid = parent.createDiv({ cls: "vault-scope-ext-grid" });
+		const grid = parent.createDiv({ cls: "lectern-ext-grid" });
 		for (const ext of extensions) {
-			const label = grid.createEl("label", { cls: "vault-scope-ext-chip" });
+			const label = grid.createEl("label", { cls: "lectern-ext-chip" });
 			const box = label.createEl("input", { type: "checkbox" });
 			box.checked = registered.has(ext);
 			label.createSpan({ text: `.${ext}` });

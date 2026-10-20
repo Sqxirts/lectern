@@ -1,4 +1,4 @@
-const plugin = app.plugins.plugins["vault-scope"];
+const plugin = app.plugins.plugins["lectern"];
 const leaf = window.__e2eLeaf, view = leaf.view;
 const child = view.viewer?.child, a = child?.pdfViewer, v = a?.pdfViewer;
 const m = plugin.pdfComments;

@@ -13,9 +13,9 @@ import { spanToRange } from "./pdfDom";
  * boxes on the text in between (0.02 px drift in the spike).
  */
 
-const LAYER_CLASS = "vault-scope-pdf-highlights";
-export const PDF_BOX_CLASS = "vault-scope-pdf-box";
-export const PDF_MARKER_CLASS = "vault-scope-pdf-marker";
+const LAYER_CLASS = "lectern-pdf-highlights";
+export const PDF_BOX_CLASS = "lectern-pdf-box";
+export const PDF_MARKER_CLASS = "lectern-pdf-marker";
 
 /** The page's text divs once PDF.js has built its text layer, else null. */
 export function renderedTextDivs(page: PdfPageView): Node[] | null {

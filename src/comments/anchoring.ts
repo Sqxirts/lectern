@@ -1,6 +1,6 @@
 import { CONTEXT_CHARS, type Anchor } from "./types";
 
-export const HIGHLIGHT_CLASS = "vault-scope-highlight";
+export const HIGHLIGHT_CLASS = "lectern-highlight";
 
 interface TextSlice {
 	node: Text;
