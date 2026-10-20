@@ -72,7 +72,7 @@ export class LecternSettingTab extends PluginSettingTab {
 			},
 			{
 				name: "Show resolved comments",
-				desc: "Show resolved comments in the margin by default, dimmed. You can always toggle them from the toolbar.",
+				desc: "Show resolved comments, dimmed, when a file opens. Either way, the Show resolved button or the \"Show or hide resolved comments\" command toggles them for the open file. In a PDF, right-click the page.",
 				control: { type: "toggle", key: "showResolvedByDefault" },
 			},
 			{
