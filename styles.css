@@ -137,6 +137,17 @@
 	margin: 0 auto;
 }
 
+/*
+ * Code: wrap to the pane, not to the longest line.
+ *
+ * max-content on a pre-wrap block is its longest line unwrapped. One long
+ * line (minified CSS, an HTML paragraph on a single line) made the page
+ * thousands of pixels wide, and the open-time fit shrank it to the 25% floor.
+ */
+.lectern-code-active .lectern-content {
+	width: 100%;
+}
+
 .lectern-zoom-indicator {
 	position: absolute;
 	right: 12px;
