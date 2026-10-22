@@ -228,7 +228,7 @@ export class CodeRenderer extends Renderer {
 	}
 
 	wrapperClass(): string | null {
-		return this.editing ? "lectern-editing" : null;
+		return this.editing ? "lectern-editing" : "lectern-code-active";
 	}
 
 	commentingBlocked(): string | null {
