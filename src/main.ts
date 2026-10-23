@@ -74,6 +74,17 @@ export default class LecternPlugin extends Plugin {
 		});
 
 		this.addCommand({
+			id: "find-in-file",
+			name: "Find in file",
+			checkCallback: (checking) => {
+				const view = this.app.workspace.getActiveViewOfType(LecternView);
+				if (!view) return false;
+				if (!checking) view.openFind();
+				return true;
+			},
+		});
+
+		this.addCommand({
 			id: "reload-comments",
 			name: "Reload comments from disk",
 			checkCallback: (checking) => {
