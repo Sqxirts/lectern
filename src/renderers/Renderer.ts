@@ -53,6 +53,16 @@ export abstract class Renderer {
 		return null;
 	}
 
+	/** Why find can't search right now, e.g. a code file being edited, or null. */
+	findBlocked(): string | null {
+		return null;
+	}
+
+	/** Make a node visible before the find bar scrolls to it. Most renderers show everything already. */
+	reveal(node: Node): void {
+		void node;
+	}
+
 	/** True when the current state blocks commenting, e.g. a code file being edited. */
 	commentingBlocked(): string | null {
 		return null;

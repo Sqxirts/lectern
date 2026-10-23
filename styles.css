@@ -88,6 +88,64 @@
 	cursor: default;
 }
 
+/* ---------- find bar ---------- */
+.lectern-find {
+	display: none;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 4px;
+	padding: 4px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+
+.lectern-find.is-open {
+	display: flex;
+}
+
+.lectern-find-host {
+	flex-shrink: 0;
+}
+
+.lectern-find-input {
+	flex: 0 1 280px;
+	min-width: 120px;
+	height: 26px;
+}
+
+.lectern-find-count {
+	min-width: 80px;
+	padding: 0 6px;
+	color: var(--text-muted);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.lectern-find-btn {
+	display: flex;
+	align-items: center;
+	padding: 4px 8px;
+}
+
+.lectern-find-btn .svg-icon {
+	width: 16px;
+	height: 16px;
+}
+
+/* Painted through the CSS Custom Highlight API, so no spans in the DOM.
+   Fixed colours, like a browser's own find: themes remap --color-yellow and
+   --color-orange, and one tested theme made them the same beige, so the
+   current match was indistinguishable from the rest. */
+::highlight(lectern-find) {
+	background-color: rgba(255, 214, 0, 0.4);
+}
+
+::highlight(lectern-find-current) {
+	background-color: #ff9632;
+	color: #000;
+}
+
 /* ---------- scroll + zoom ---------- */
 
 .lectern-wrapper {

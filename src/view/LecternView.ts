@@ -1,4 +1,4 @@
-import { FileView, Notice, TFile, WorkspaceLeaf } from "obsidian";
+import { FileView, Notice, Scope, TFile, WorkspaceLeaf } from "obsidian";
 import { VIEW_TYPE_LECTERN, classify, type FileKind } from "../constants";
 import type { LecternSettings } from "../settings";
 import { Renderer, type RenderContext, type ToolbarItem } from "../renderers/Renderer";
@@ -8,6 +8,7 @@ import { XlsxRenderer } from "../renderers/XlsxRenderer";
 import { PptxRenderer } from "../renderers/PptxRenderer";
 import { Toolbar } from "./Toolbar";
 import { ZoomController } from "./ZoomController";
+import { FIND_SHORTCUT, FindController } from "../find/FindController";
 import { CommentStore } from "../comments/CommentStore";
 import { CommentRail } from "../comments/CommentRail";
 import { CommentSession, type CommentHost } from "../comments/CommentSession";
@@ -26,6 +27,7 @@ export class LecternView extends FileView {
 	private renderer: Renderer | null = null;
 	private zoom: ZoomController | null = null;
 	private comments: CommentSession<TFile> | null = null;
+	private find: FindController | null = null;
 
 	private scrollHandler: (() => void) | null = null;
 	private resizeObserver: ResizeObserver | null = null;
@@ -40,6 +42,15 @@ export class LecternView extends FileView {
 	constructor(leaf: WorkspaceLeaf, settings: LecternSettings) {
 		super(leaf);
 		this.settings = settings;
+
+		// Bound on the view's own scope, not as a plugin hotkey: Mod+F is the
+		// editor's search everywhere else, and this only applies while a
+		// Lectern tab has focus. Returning false stops Obsidian handling it too.
+		this.scope = new Scope(this.app.scope);
+		this.scope.register(["Mod"], "f", () => {
+			this.openFind();
+			return false;
+		});
 	}
 
 	getViewType(): string {
@@ -152,6 +163,8 @@ export class LecternView extends FileView {
 		this.zoom = null;
 		this.comments?.destroy();
 		this.comments = null;
+		this.find?.destroy();
+		this.find = null;
 
 		if (this.scrollHandler) {
 			this.wrapper?.removeEventListener("scroll", this.scrollHandler);
@@ -167,6 +180,7 @@ export class LecternView extends FileView {
 		this.contentEl.addClass("lectern-container");
 
 		this.toolbar = new Toolbar(this.contentEl);
+		const findHost = this.contentEl.createDiv({ cls: "lectern-find-host" });
 
 		this.wrapper = this.contentEl.createDiv({ cls: "lectern-wrapper" });
 		this.sizer = this.wrapper.createDiv({ cls: "lectern-sizer" });
@@ -180,6 +194,17 @@ export class LecternView extends FileView {
 			// value because nothing refreshed it.
 			this.refreshToolbar();
 		});
+
+		this.find = new FindController(findHost, this.content, this.wrapper, {
+			reveal: (node) => this.renderer?.reveal(node),
+			blockedReason: () => this.renderer?.findBlocked() ?? null,
+			changed: () => this.refreshToolbar(),
+		});
+	}
+
+	/** Open the find bar, or refocus it if it's already open. */
+	openFind(): void {
+		this.find?.open();
 	}
 
 	private watchLayout(): void {
@@ -283,7 +308,17 @@ export class LecternView extends FileView {
 			},
 		];
 
-		this.toolbar.render([zoomGroup, this.renderer?.toolbarItems() ?? [], commentGroup]);
+		const findGroup: ToolbarItem[] = [
+			{
+				id: "find",
+				label: `Find in this file (${FIND_SHORTCUT})`,
+				text: "Find",
+				active: this.find?.isOpen ?? false,
+				onClick: () => this.find?.toggle(),
+			},
+		];
+
+		this.toolbar.render([zoomGroup, this.renderer?.toolbarItems() ?? [], findGroup, commentGroup]);
 	}
 }
 

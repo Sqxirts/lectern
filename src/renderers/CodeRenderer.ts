@@ -231,6 +231,10 @@ export class CodeRenderer extends Renderer {
 		return this.editing ? "lectern-editing" : "lectern-code-active";
 	}
 
+	findBlocked(): string | null {
+		return this.editing ? "Save or cancel to search" : null;
+	}
+
 	commentingBlocked(): string | null {
 		return this.editing ? "Finish editing before adding a comment." : null;
 	}

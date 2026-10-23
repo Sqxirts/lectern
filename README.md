@@ -17,6 +17,7 @@
 ## What it does
 
 - **Opens Office and code files.** `.pptx`, `.docx`, `.xlsx`, `.xls`, and 130+ code and text formats, with syntax highlighting, zoom and pan.
+- **Find in any file.** `Ctrl+F` searches slides, speaker notes, Word documents, every sheet of a workbook, and code.
 - **Slide text is real text.** Drag-select and `Ctrl+C` work on slides. Other preview plugins draw slides to a canvas, which is just pixels.
 - **Copies a deck out as markdown.** `Copy slide` grabs one slide; `Copy all` exports the whole deck with one heading per slide. Speaker notes show under each slide.
 - **Word-style margin comments.** Select text, run **Comment on selection** (or your hotkey for it), write a note. Cards sit in a right-hand margin with a line to the highlight.
@@ -58,6 +59,7 @@ Without `LECTERN_OUT` the build goes to `./dist`.
 | Comment on a PDF selection | Right-click → **Highlight and comment**, or the same command |
 | Copy one slide / the whole deck | **Copy slide** / **Copy all** in the toolbar |
 | Zoom / pan | `Ctrl+scroll` or the toolbar; middle-drag to pan |
+| Find text in a file | `Ctrl+F` (`Cmd+F` on Mac) while a Lectern tab is focused, or **Find** in the toolbar. `Enter` / `Shift+Enter` step through matches; a spreadsheet switches to the sheet holding the match |
 | Hide a finished comment | **Resolve** on the card. It stays in the sidecar note |
 | See or reopen resolved comments | **Show resolved** in the toolbar; in a PDF, right-click the page. Or the **Show or hide resolved comments** command |
 | Edit a text or code file | **Edit**, then **Save** in the toolbar |
