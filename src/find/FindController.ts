@@ -243,7 +243,7 @@ export class FindController {
 	 * Returns null where the API is missing; find still counts and scrolls.
 	 */
 	private registry(name: string, priority: number): Highlight | null {
-		const win = this.root.ownerDocument.defaultView as (Window & typeof globalThis) | null;
+		const win = this.root.ownerDocument.defaultView;
 		if (!win || typeof win.Highlight === "undefined" || !win.CSS?.highlights) return null;
 
 		let highlight = win.CSS.highlights.get(name);

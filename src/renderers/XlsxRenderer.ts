@@ -50,7 +50,8 @@ export class XlsxRenderer extends Renderer {
 
 	/** Find searches every sheet; switch to the one holding the match. */
 	reveal(node: Node): void {
-		const element = node instanceof Element ? node : node.parentElement;
+		// instanceOf, not instanceof: a popout window has its own Element class.
+		const element = node.instanceOf(Element) ? node : node.parentElement;
 		const sheet = element?.closest<HTMLElement>(".lectern-xlsx-sheet");
 		if (!sheet) return;
 		const index = Number(sheet.dataset.sheetIndex);

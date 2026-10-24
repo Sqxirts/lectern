@@ -62,7 +62,13 @@ function field(obj: unknown, key: string): unknown {
 	return typeof obj === "object" && obj !== null ? (obj as Record<string, unknown>)[key] : undefined;
 }
 
-const isElement = (value: unknown): value is HTMLElement => value instanceof HTMLElement;
+/**
+ * Cross-window safe: a popout's elements fail `instanceof HTMLElement`
+ * against the main window's class. Only DOM nodes carry Obsidian's
+ * instanceOf, so check for it before calling it on an unknown value.
+ */
+const isElement = (value: unknown): value is HTMLElement =>
+	fn(field(value, "instanceOf")) && (value as Node).instanceOf(HTMLElement);
 
 /** The PDF internals behind an Obsidian view, or null if this is not a PDF view or Obsidian changed shape. */
 export function probePdfInternals(view: View | null | undefined): PdfInternals | null {
