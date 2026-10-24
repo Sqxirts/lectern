@@ -41,8 +41,10 @@ export function patchPdfContextMenu(findController: (target: Element) => PdfComm
 
 function addHighlightItem(menu: Menu, evt: MouseEvent, findController: (target: Element) => PdfCommentController | null): void {
 	if (evt.type !== "contextmenu") return;
-	const target = evt.target;
-	if (!(target instanceof Element) || !target.closest(".page[data-page-number]")) return;
+	// targetNode and instanceOf are Obsidian's cross-window versions: a PDF in
+	// a popout window has its own Element class, so instanceof would miss it.
+	const target = evt.targetNode;
+	if (!target?.instanceOf(Element) || !target.closest(".page[data-page-number]")) return;
 
 	const controller = findController(target);
 	if (!controller) return;
