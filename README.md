@@ -94,7 +94,10 @@ On **Windows only**, slides that contain old Windows vector images (EMF/WMF), wh
 npm run dev        # rebuild on save
 npm test           # vitest
 npm run typecheck
+npm run lint       # the community directory's eslint rules
 ```
+
+Run `npm run lint` before every release. It uses [eslint-plugin-obsidianmd](https://github.com/obsidianmd/eslint-plugin), the same rules the community directory's release review applies, so a warning here would turn that review from Passed to Satisfactory.
 
 After the first launch you can pick up a rebuild by toggling the plugin off and on. Test fixtures are generated, not committed: `python fixtures/make_fixtures.py` (needs `python-pptx`, `python-docx`, `openpyxl`).
 
