@@ -25,7 +25,7 @@
 - **Comments on PDFs too,** inside Obsidian's own PDF viewer. Right-click a selection and pick **Highlight and comment**. Page links, search and thumbnails keep working.
 - **A comment index.** **Open the comment index** makes a Base listing every annotated file with its open and resolved counts, busiest first.
 - **Export to markdown.** **Export** in the toolbar copies a deck, Word document or workbook as markdown, or saves it as a note next to the file (`Name (export).md`). Re-exporting refreshes that note and never overwrites one you wrote.
-- **Your files are never modified.** Comments go to a sidecar note in `File-Notes/`, so they show up in search, backlinks and sync like any other note.
+- **Your files are never modified.** Comments go to a sidecar note in `File-Notes/`, so they show up in search, backlinks and sync like any other note. In the note, each comment links back to its spot in the file.
 
 ## Install
 

@@ -935,3 +935,31 @@ td.lectern-highlight {
 .lectern-connectors.is-beside {
 	overflow: hidden;
 }
+
+/* Sidecar notes in Live Preview: the %%scope JSON becomes this chip. */
+.lectern-scope-chip {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	margin-block: var(--size-4-1);
+}
+
+.lectern-scope-chip-link {
+	height: auto;
+	padding: var(--size-2-1) var(--size-4-2);
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+	border-radius: var(--radius-s);
+	box-shadow: none;
+	cursor: var(--cursor-link);
+}
+
+.lectern-scope-chip-link:hover {
+	color: var(--text-accent);
+}
+
+.lectern-scope-chip-status {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+}

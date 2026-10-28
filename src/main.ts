@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile } from "obsidian";
+import { FileView, Notice, Plugin, TFile, type WorkspaceLeaf } from "obsidian";
 import { ALL_EXTENSIONS, NEVER_REGISTER, PLUGIN_NAME, VIEW_TYPE_LECTERN, classify, migrateExtensions } from "./constants";
 import { DEFAULT_SETTINGS, LecternSettingTab, type LecternSettings } from "./settings";
 import { LecternView } from "./view/LecternView";
@@ -6,6 +6,8 @@ import { PdfCommentManager } from "./pdf/PdfCommentManager";
 import type { PdfCommentController } from "./pdf/PdfCommentController";
 import { patchPdfContextMenu } from "./pdf/pdfContextMenu";
 import { openCommentIndex } from "./comments/openCommentIndex";
+import { sidecarEditorExtension } from "./comments/sidecarEditor";
+import type { Anchor } from "./comments/types";
 
 /** What the comment commands need, from either a Lectern view or a PDF tab. */
 interface CommentTarget {
@@ -33,6 +35,7 @@ export default class LecternPlugin extends Plugin {
 
 		this.registerView(VIEW_TYPE_LECTERN, (leaf) => new LecternView(leaf, this.settings));
 		this.registerFileExtensions();
+		this.registerEditorExtension(sidecarEditorExtension((path, anchor) => void this.openAnchor(path, anchor)));
 
 		this.addRibbonIcon("scan-eye", `Open in ${PLUGIN_NAME}`, () => void this.openActiveFile());
 
@@ -169,6 +172,37 @@ export default class LecternPlugin extends Plugin {
 			if (leaf.view.containerEl.contains(target)) return this.pdfComments.forLeaf(leaf);
 		}
 		return null;
+	}
+
+	/**
+	 * A sidecar chip was clicked: show the commented file. PDFs jump to the exact
+	 * selection through Obsidian's own #page link; other kinds just open the file.
+	 */
+	private async openAnchor(sidecarPath: string, anchor: Anchor): Promise<void> {
+		const sidecar = this.app.vault.getFileByPath(sidecarPath);
+		const source: unknown = sidecar ? this.app.metadataCache.getFileCache(sidecar)?.frontmatter?.source : null;
+		const file = typeof source === "string" ? this.app.vault.getFileByPath(source) : null;
+		if (!file) {
+			new Notice("Couldn't find the file these comments belong to. Check the note's source property.");
+			return;
+		}
+
+		let subpath = "";
+		if (anchor.kind === "pdf") {
+			subpath = `#page=${anchor.page}`;
+			if (anchor.selection) subpath += `&selection=${anchor.selection.join(",")}`;
+		}
+
+		// reuse a tab that already shows the file, else open beside the note
+		let leaf: WorkspaceLeaf | null = null;
+		this.app.workspace.iterateAllLeaves((candidate) => {
+			if (!leaf && candidate.view instanceof FileView && candidate.view.file?.path === file.path) leaf = candidate;
+		});
+		if (leaf && !subpath) {
+			await this.app.workspace.revealLeaf(leaf);
+			return;
+		}
+		await (leaf ?? this.app.workspace.getLeaf("split")).openFile(file, { active: true, eState: { subpath } });
 	}
 
 	private async openActiveFile(): Promise<void> {
