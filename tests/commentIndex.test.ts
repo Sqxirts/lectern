@@ -31,6 +31,8 @@ describe("comment index base", () => {
 		expect(base.filters.and).toContain('file.hasTag("annotation")');
 		// file.name is not a plain string in Bases, so endsWith on it matches nothing; file.path is.
 		expect(base.filters.and).toContain('file.path.endsWith(".comments.md")');
+		// Bases only applies displayName to frontmatter properties under the note. prefix.
+		expect(Object.keys(base.properties)).toEqual(["note.source", "note.open_comments", "note.resolved_comments", "note.area"]);
 		for (const view of base.views) expect(view.order).toContain("open_comments");
 	});
 });
