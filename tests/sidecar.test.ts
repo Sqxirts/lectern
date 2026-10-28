@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseSidecar, serialiseSidecar, type ParsedSidecar } from "../src/comments/sidecarFormat";
+import { findScopeBlocks, parseSidecar, serialiseSidecar, type ParsedSidecar } from "../src/comments/sidecarFormat";
 import type { ScopeComment } from "../src/comments/types";
 
 const FRONTMATTER = {
@@ -102,5 +102,45 @@ describe("sidecar round trip", () => {
 
 	it("reads an empty file as no comments", () => {
 		expect(parseSidecar("").comments).toHaveLength(0);
+	});
+});
+
+describe("findScopeBlocks", () => {
+	it("finds each block as whole lines, from %%scope to the closing %%", () => {
+		const markdown = serialiseSidecar(
+			sidecar([comment(), comment({ id: "c2", status: "resolved" })]),
+			FRONTMATTER,
+		);
+		const blocks = findScopeBlocks(markdown);
+
+		expect(blocks).toHaveLength(2);
+		for (const block of blocks) {
+			const text = markdown.slice(block.from, block.to);
+			expect(text.startsWith("%%scope\n")).toBe(true);
+			expect(text.endsWith("\n%%")).toBe(true);
+			// the comment body is outside the block, so it stays on screen
+			expect(text).not.toContain("Check whether this is on the midterm.");
+		}
+		expect(blocks[0].meta).toEqual({ anchor: comment().anchor, status: "open" });
+		expect(blocks[1].meta?.status).toBe("resolved");
+	});
+
+	it("still finds a block with Windows line endings", () => {
+		const markdown = serialiseSidecar(sidecar([comment()]), FRONTMATTER).replace(/\n/g, "\r\n");
+		const [block] = findScopeBlocks(markdown);
+
+		expect(block.meta?.anchor.kind).toBe("pptx");
+		expect(markdown.slice(block.from, block.to).endsWith("%%")).toBe(true);
+	});
+
+	it("returns null meta for hand-broken JSON instead of throwing", () => {
+		const blocks = findScopeBlocks("## Slide 1\n\n%%scope\n{not json\n%%\n\nNote.");
+
+		expect(blocks).toHaveLength(1);
+		expect(blocks[0].meta).toBeNull();
+	});
+
+	it("ignores ordinary Obsidian comments", () => {
+		expect(findScopeBlocks("%%\nmy own comment\n%%\n\n%% inline %%")).toEqual([]);
 	});
 });

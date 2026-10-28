@@ -4,9 +4,10 @@ import { anchorLabel, type Anchor, type CommentStatus, type ScopeComment } from 
  * Reading and writing the comment sidecar. Kept free of Obsidian imports so it
  * stays a pure string-in, string-out module that can be tested on its own.
  *
- * The machine-readable part sits in a `%% %%` block, which Obsidian renders as
- * nothing but still indexes for search. So the note reads cleanly, the plugin
- * keeps its metadata, and nothing is hidden from global search.
+ * The machine-readable part sits in a `%% %%` block. Reading view renders it as
+ * nothing, search still indexes it, and Live Preview would show it dimmed, so
+ * sidecarEditor.ts swaps each block for a chip there. The note reads cleanly in
+ * both modes and nothing is hidden from global search.
  *
  * That block holds JSON rather than YAML: quotes, colons and newlines all turn
  * up inside quoted slide text, and JSON escapes them without needing a parser.
@@ -21,6 +22,34 @@ interface StoredMeta {
 	anchor: Anchor;
 	status: CommentStatus;
 	created: string;
+}
+
+/** Where a `%%scope` block sits in a sidecar, whole lines from `%%scope` to `%%`. */
+export interface ScopeBlock {
+	from: number;
+	to: number;
+	/** Null when the JSON doesn't parse; the editor then leaves the block alone. */
+	meta: { anchor: Anchor; status: CommentStatus } | null;
+}
+
+const SCOPE_BLOCK = /^%%scope[ \t]*\r?\n([\s\S]*?)\r?\n%%[ \t]*$/gm;
+
+/** Every scope block in a sidecar, for the editor to hide. */
+export function findScopeBlocks(markdown: string): ScopeBlock[] {
+	const blocks: ScopeBlock[] = [];
+	for (const match of markdown.matchAll(SCOPE_BLOCK)) {
+		let meta: ScopeBlock["meta"] = null;
+		try {
+			const parsed = JSON.parse(match[1]) as Partial<StoredMeta>;
+			if (parsed?.anchor?.kind) {
+				meta = { anchor: parsed.anchor, status: parsed.status === "resolved" ? "resolved" : "open" };
+			}
+		} catch {
+			// hand-edited into invalid JSON: show it raw so it can be fixed
+		}
+		blocks.push({ from: match.index, to: match.index + match[0].length, meta });
+	}
+	return blocks;
 }
 
 /** A `## ` section we could not parse. Kept verbatim so hand edits survive. */

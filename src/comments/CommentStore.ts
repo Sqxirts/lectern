@@ -110,13 +110,21 @@ export class CommentStore {
 	}
 
 	private async flush(): Promise<void> {
+		const existing = this.sidecarFile();
+
+		// Last comment gone and nothing hand-written left: drop the note rather
+		// than keep an empty one. trashFile honours the user's deleted-files setting.
+		if (this.isEmpty()) {
+			if (existing) await this.app.fileManager.trashFile(existing);
+			return;
+		}
+
 		const markdown = serialiseSidecar(this.parsed, {
 			title: `Comments on ${this.source.name}`,
 			area: this.area(),
 			source: this.source.path,
 		});
 
-		const existing = this.sidecarFile();
 		if (existing) {
 			await this.app.vault.modify(existing, markdown);
 			return;
@@ -124,6 +132,11 @@ export class CommentStore {
 
 		await this.ensureFolder();
 		await this.app.vault.create(this.path, markdown);
+	}
+
+	/** No comments, resolved ones included, and no text the user added by hand. */
+	private isEmpty(): boolean {
+		return this.parsed.comments.length === 0 && !this.parsed.preamble.trim() && this.parsed.foreign.length === 0;
 	}
 
 	private async ensureFolder(): Promise<void> {

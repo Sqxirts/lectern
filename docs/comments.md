@@ -8,7 +8,9 @@ File-Notes/lecture-3.pptx.comments.md
 
 Your `.pptx` is never rewritten. Rewriting an OOXML zip risks corrupting a file you did not author, and a sidecar is the only version Obsidian's global search can see.
 
-Machine-readable data sits in a `%%scope` block. Obsidian renders `%% %%` as nothing but still indexes it, so the note reads cleanly and nothing is hidden from search:
+The sidecar exists only while it holds something. Delete the last comment (resolved ones count) and the note goes to the trash, following Obsidian's *Deleted files* setting. If you wrote your own text in the note, it stays.
+
+Machine-readable data sits in a `%%scope` block. Search still indexes it, and Reading view hides it. Live Preview would show it as dimmed JSON, so Lectern draws each block as a small chip instead, such as **Page 1 ↗**, that opens the source file at that spot (PDFs jump to the exact selection). To see and edit the raw block, run **Toggle Live Preview/Source mode**. The file on disk is never changed:
 
 ```markdown
 ## Slide 4: "the CIA triad is not a checklist"
