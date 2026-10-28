@@ -33,9 +33,14 @@ class FakeVault {
 	async createFolder(path: string) { await tick(); this.folders.add(path); }
 }
 
+/** Obsidian's fileManager, trashing straight out of the fake vault. */
+function fakeApp(vault: FakeVault) {
+	return { vault, fileManager: { trashFile: async (file: { path: string }) => { await tick(); vault.files.delete(file.path); } } } as any;
+}
+
 function stores(n: number) {
 	const vault = new FakeVault();
-	const app = { vault } as any;
+	const app = fakeApp(vault);
 	const source = new (TFile as any)("Degree/deck.pptx");
 	return { vault, list: Array.from({ length: n }, () => new CommentStore(app, source, "File-Notes")) };
 }
@@ -47,7 +52,7 @@ describe("CommentStore: two panes on one file", () => {
 		await b.load();
 		await a.add(comment("from-a"));
 		await b.add(comment("from-b")); // b's copy predates a's save
-		const check = new CommentStore({ vault } as any, new (TFile as any)("Degree/deck.pptx"), "File-Notes");
+		const check = new CommentStore(fakeApp(vault), new (TFile as any)("Degree/deck.pptx"), "File-Notes");
 		expect((await check.load()).map((c) => c.id)).toEqual(["from-a", "from-b"]);
 	});
 
@@ -62,6 +67,7 @@ describe("CommentStore: two panes on one file", () => {
 
 	it("does not resurrect a comment another pane deleted", async () => {
 		const { vault, list: [a, b] } = stores(2);
+		await a.add(comment("kept"));
 		await a.add(comment("gone"));
 		await b.load();
 		await a.remove("gone");
@@ -162,5 +168,43 @@ describe("CommentSession races", () => {
 		store.fail = false;
 		await s.commitDraft("retry me");
 		expect(store.comments.map((c) => c.body)).toEqual(["retry me"]);
+	});
+});
+
+describe("CommentStore: empty sidecars", () => {
+	const PATH = "File-Notes/deck.pptx.comments.md";
+
+	it("deletes the sidecar when its last comment is removed", async () => {
+		const { vault, list: [a] } = stores(1);
+		await a.add(comment("only"));
+		expect(vault.files.has(PATH)).toBe(true);
+		await a.remove("only");
+		expect(vault.files.has(PATH)).toBe(false);
+		expect(a.sidecarFile()).toBeNull();
+	});
+
+	it("keeps the sidecar while a resolved comment is left", async () => {
+		const { vault, list: [a] } = stores(1);
+		await a.add(comment("done"));
+		await a.add(comment("open"));
+		await a.update("done", { status: "resolved" });
+		await a.remove("open");
+		expect(vault.files.has(PATH)).toBe(true);
+	});
+
+	it("keeps a sidecar the user wrote their own text in", async () => {
+		const { vault, list: [a] } = stores(1);
+		await a.add(comment("only"));
+		vault.files.set(PATH, vault.files.get(PATH)!.replace("## ", "My summary of this deck.\n\n## "));
+		await a.remove("only");
+		expect(vault.files.get(PATH)).toContain("My summary of this deck.");
+	});
+
+	it("can start a new sidecar after the old one was deleted", async () => {
+		const { vault, list: [a] } = stores(1);
+		await a.add(comment("first"));
+		await a.remove("first");
+		await a.add(comment("second"));
+		expect(vault.files.get(PATH)).toContain("note second");
 	});
 });
