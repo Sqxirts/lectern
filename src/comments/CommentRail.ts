@@ -234,8 +234,12 @@ export class CommentRail {
 		card.toggleClass("is-resolved", comment.status === "resolved");
 		card.toggleClass("is-orphaned", placed.orphaned);
 
+		// No body means a highlight with no note; Edit turns it into a comment.
+		const highlightOnly = comment.body.trim() === "";
+		card.toggleClass("is-highlight", highlightOnly);
+
 		const meta = card.createDiv({ cls: "lectern-card-meta" });
-		meta.createSpan({ text: comment.created || "" });
+		meta.createSpan({ text: highlightOnly ? `Highlight ${comment.created}`.trim() : comment.created || "" });
 		if (placed.orphaned) {
 			meta.createSpan({
 				cls: "lectern-badge",
@@ -251,7 +255,7 @@ export class CommentRail {
 
 		const actions = card.createDiv({ cls: "lectern-card-actions" });
 
-		const edit = actions.createEl("button", { text: "Edit" });
+		const edit = actions.createEl("button", { text: highlightOnly ? "Add note" : "Edit" });
 		edit.addEventListener("click", () => this.startEdit(card, body, comment));
 
 		const resolve = actions.createEl("button", {

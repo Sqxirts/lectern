@@ -68,18 +68,32 @@ function addHighlightItem(menu: Menu, evt: MouseEvent, findController: (target: 
 	// before the comment session reads it.
 	const saved = selection.getRangeAt(0).cloneRange();
 
+	const restoreSelection = () => {
+		const live = target.ownerDocument.getSelection();
+		if (live && live.isCollapsed) {
+			live.removeAllRanges();
+			live.addRange(saved);
+		}
+	};
+
 	menu.addItem((item) =>
 		item
 			.setSection("selection")
 			.setTitle("Highlight and comment")
 			.setIcon("highlighter")
 			.onClick(() => {
-				const live = target.ownerDocument.getSelection();
-				if (live && live.isCollapsed) {
-					live.removeAllRanges();
-					live.addRange(saved);
-				}
+				restoreSelection();
 				controller.startComment();
+			}),
+	);
+	menu.addItem((item) =>
+		item
+			.setSection("selection")
+			.setTitle("Highlight without a note")
+			.setIcon("highlighter")
+			.onClick(() => {
+				restoreSelection();
+				controller.highlightSelection();
 			}),
 	);
 }

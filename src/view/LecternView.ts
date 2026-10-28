@@ -251,11 +251,16 @@ export class LecternView extends FileView {
 		this.comments?.startComment();
 	}
 
-	/** Open the markdown sidecar in a split beside the preview. */
+	/** Highlight the selection with no note. */
+	highlightSelection(): void {
+		void this.comments?.highlightSelection();
+	}
+
 	toggleResolved(): void {
 		this.comments?.toggleResolved();
 	}
 
+	/** Open the markdown sidecar in a split beside the preview. */
 	async openSidecar(): Promise<void> {
 		await this.comments?.openSidecar();
 	}
@@ -291,6 +296,12 @@ export class LecternView extends FileView {
 				label: "Comment on the selected text",
 				text: "Comment",
 				onClick: () => this.startComment(),
+			},
+			{
+				id: "highlight",
+				label: "Highlight the selected text without a note",
+				text: "Highlight",
+				onClick: () => this.highlightSelection(),
 			},
 			{
 				id: "open-sidecar",
