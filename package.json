@@ -22,7 +22,8 @@
 		"playwright": "^1.63.0",
 		"tslib": "^2.8.1",
 		"typescript": "^5.7.2",
-		"vitest": "^2.1.8"
+		"vitest": "^2.1.8",
+		"yaml": "^2.9.1"
 	},
 	"dependencies": {
 		"@jvmr/pptx-to-html": "^1.1.2",

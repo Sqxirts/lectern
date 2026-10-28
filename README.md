@@ -23,6 +23,7 @@
 - **Word-style margin comments.** Select text, run **Comment on selection** (or your hotkey for it), write a note. Cards sit in a right-hand margin with a line to the highlight.
 - **Highlight without a note.** Select text and run **Highlight selection** (or the toolbar button). The card shows **Add note** if you change your mind.
 - **Comments on PDFs too,** inside Obsidian's own PDF viewer. Right-click a selection and pick **Highlight and comment**. Page links, search and thumbnails keep working.
+- **A comment index.** **Open the comment index** makes a Base listing every annotated file with its open and resolved counts, busiest first.
 - **Your files are never modified.** Comments go to a sidecar note in `File-Notes/`, so they show up in search, backlinks and sync like any other note.
 
 ## Install
@@ -62,6 +63,7 @@ Without `LECTERN_OUT` the build goes to `./dist`.
 | Copy one slide / the whole deck | **Copy slide** / **Copy all** in the toolbar |
 | Zoom / pan | `Ctrl+scroll` or the toolbar; middle-drag to pan |
 | Find text in a file | `Ctrl+F` (`Cmd+F` on Mac) while a Lectern tab is focused, or **Find** in the toolbar. `Enter` / `Shift+Enter` step through matches; a spreadsheet switches to the sheet holding the match |
+| See comments across the vault | **Open the comment index** command. It creates `Comments.base` in the comment folder |
 | Hide a finished comment | **Resolve** on the card. It stays in the sidecar note |
 | See or reopen resolved comments | **Show resolved** in the toolbar; in a PDF, right-click the page. Or the **Show or hide resolved comments** command |
 | Edit a text or code file | **Edit**, then **Save** in the toolbar |

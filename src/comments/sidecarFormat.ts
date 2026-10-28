@@ -40,13 +40,27 @@ export interface SidecarFrontmatter {
 	source: string;
 }
 
+/** Comment counts, kept in the frontmatter so a Base can list and sort sidecars by them. */
+export interface CommentCounts {
+	open_comments: number;
+	resolved_comments: number;
+}
+
+export function countComments(comments: readonly ScopeComment[]): CommentCounts {
+	const resolved = comments.filter((c) => c.status === "resolved").length;
+	return { open_comments: comments.length - resolved, resolved_comments: resolved };
+}
+
 export function serialiseSidecar(parsed: ParsedSidecar, frontmatter: SidecarFrontmatter): string {
+	const counts = countComments(parsed.comments);
 	const head = [
 		"---",
 		`title: ${frontmatter.title}`,
 		"type: reference",
 		`area: ${frontmatter.area}`,
 		`source: ${frontmatter.source}`,
+		`open_comments: ${counts.open_comments}`,
+		`resolved_comments: ${counts.resolved_comments}`,
 		"tags:",
 		"  - annotation",
 		"---",
