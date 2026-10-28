@@ -29,7 +29,7 @@ export class Toolbar {
 		setTooltip(button, item.label, { placement: "bottom" });
 		button.toggleClass("is-active", item.active === true);
 		button.disabled = item.disabled === true;
-		button.addEventListener("click", () => void item.onClick());
+		button.addEventListener("click", (event) => void item.onClick(event));
 	}
 
 	/** A read-only label, used for the zoom percentage. */

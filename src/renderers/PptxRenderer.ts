@@ -192,6 +192,14 @@ export class PptxRenderer extends Renderer {
 		];
 	}
 
+	exportMarkdown(): Promise<string | null> {
+		return Promise.resolve(deckToMarkdown(this.slides, this.notesVisible));
+	}
+
+	canExport(): boolean {
+		return true;
+	}
+
 	wrapperClass(): string | null {
 		return "lectern-pptx-active";
 	}
