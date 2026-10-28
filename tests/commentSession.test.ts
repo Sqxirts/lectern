@@ -172,6 +172,32 @@ describe("CommentSession", () => {
 		expect(changed).toBe(1);
 	});
 
+	it("highlights a selection straight away, with no draft and an empty body", async () => {
+		select(document.getElementById("line")!);
+		await session.highlightSelection();
+
+		const added = store.comments[2];
+		expect(added.anchor).toEqual(ANCHOR);
+		expect(added.body).toBe("");
+		expect(added.status).toBe("open");
+		expect(rail.draftTop).toBeNull();
+		expect(window.getSelection()!.rangeCount).toBe(0);
+		expect(rail.placed).toHaveLength(3);
+		expect(changed).toBe(1);
+	});
+
+	it("applies the same selection checks to highlights", async () => {
+		window.getSelection()!.removeAllRanges();
+		await session.highlightSelection();
+		expect(notices[0]).toMatch(/Select some text first, then highlight it/);
+
+		blocked = "Finish editing before adding a comment.";
+		select(document.getElementById("line")!);
+		await session.highlightSelection();
+		expect(notices[1]).toBe(blocked);
+		expect(store.comments).toHaveLength(2);
+	});
+
 	it("does nothing on commit when no draft is open", async () => {
 		await session.commitDraft("stray");
 		expect(store.comments).toHaveLength(2);

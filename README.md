@@ -21,6 +21,7 @@
 - **Slide text is real text.** Drag-select and `Ctrl+C` work on slides. Other preview plugins draw slides to a canvas, which is just pixels.
 - **Copies a deck out as markdown.** `Copy slide` grabs one slide; `Copy all` exports the whole deck with one heading per slide. Speaker notes show under each slide.
 - **Word-style margin comments.** Select text, run **Comment on selection** (or your hotkey for it), write a note. Cards sit in a right-hand margin with a line to the highlight.
+- **Highlight without a note.** Select text and run **Highlight selection** (or the toolbar button). The card shows **Add note** if you change your mind.
 - **Comments on PDFs too,** inside Obsidian's own PDF viewer. Right-click a selection and pick **Highlight and comment**. Page links, search and thumbnails keep working.
 - **Your files are never modified.** Comments go to a sidecar note in `File-Notes/`, so they show up in search, backlinks and sync like any other note.
 
@@ -56,6 +57,7 @@ Without `LECTERN_OUT` the build goes to `./dist`.
 | To | Do |
 |---|---|
 | Comment on a selection | The **Comment** toolbar button, or the **Comment on selection** command |
+| Highlight with no note | The **Highlight** toolbar button, or the **Highlight selection** command. In a PDF, right-click → **Highlight without a note** |
 | Comment on a PDF selection | Right-click → **Highlight and comment**, or the same command |
 | Copy one slide / the whole deck | **Copy slide** / **Copy all** in the toolbar |
 | Zoom / pan | `Ctrl+scroll` or the toolbar; middle-drag to pan |

@@ -145,36 +145,74 @@ export class CommentSession<F = unknown> implements RailDelegate {
 		this.rail?.focus(id);
 	}
 
-	/** Start a comment from whatever is selected right now. */
-	startComment(): void {
-		if (!this.rail) return;
-
+	/**
+	 * Turn the live selection into an anchor, or tell the user why it can't be.
+	 * Shared by comments and highlights, which differ only in what happens next.
+	 */
+	private anchorFromSelection(action: string): { anchor: Anchor; range: Range } | null {
 		const blocked = this.host.blockedReason();
 		if (blocked) {
 			this.services.notify(blocked);
-			return;
+			return null;
 		}
 
 		const selection = this.services.getSelection();
 		if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-			this.services.notify("Select some text first, then add a comment.");
-			return;
+			this.services.notify(`Select some text first, then ${action}.`);
+			return null;
 		}
 
 		const range = selection.getRangeAt(0);
 		if (!this.host.root.contains(range.commonAncestorContainer)) {
 			this.services.notify("Select text inside the document.");
-			return;
+			return null;
 		}
 
 		const anchor = this.host.buildAnchor(range);
 		if (!anchor) {
 			this.services.notify("That selection cannot be anchored. Try selecting inside a single slide, page, or line.");
+			return null;
+		}
+		return { anchor, range };
+	}
+
+	/** Start a comment from whatever is selected right now. */
+	startComment(): void {
+		if (!this.rail) return;
+		const found = this.anchorFromSelection("add a comment");
+		if (!found) return;
+
+		this.draftAnchor = found.anchor;
+		this.rail.openDraft(this.host.draftTop(found.range));
+	}
+
+	/**
+	 * Highlight the selection with no note. It is stored as a comment with an
+	 * empty body, so the sidecar format is unchanged and a note can be added to
+	 * it later with Edit.
+	 */
+	async highlightSelection(): Promise<void> {
+		if (!this.rail) return;
+		const found = this.anchorFromSelection("highlight it");
+		if (!found) return;
+
+		try {
+			await this.store.add({
+				id: newCommentId(),
+				anchor: found.anchor,
+				status: "open",
+				created: nowStamp(),
+				body: "",
+			});
+		} catch (error) {
+			this.services.notify("Could not save the highlight. Try again.");
+			console.error("[lectern] highlight save failed", error);
 			return;
 		}
 
-		this.draftAnchor = anchor;
-		this.rail.openDraft(this.host.draftTop(range));
+		this.services.getSelection()?.removeAllRanges();
+		this.place();
+		this.host.changed();
 	}
 
 	async commitDraft(body: string): Promise<void> {

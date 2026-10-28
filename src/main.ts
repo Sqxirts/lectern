@@ -9,6 +9,7 @@ import { patchPdfContextMenu } from "./pdf/pdfContextMenu";
 /** What the comment commands need, from either a Lectern view or a PDF tab. */
 interface CommentTarget {
 	startComment(): void;
+	highlightSelection(): void;
 	toggleResolved(): void;
 	openSidecar(): Promise<void>;
 	reloadComments(): Promise<void>;
@@ -47,6 +48,17 @@ export default class LecternPlugin extends Plugin {
 				const view = this.activeCommentTarget();
 				if (!view) return false;
 				if (!checking) view.startComment();
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: "highlight-selection",
+			name: "Highlight selection",
+			checkCallback: (checking) => {
+				const view = this.activeCommentTarget();
+				if (!view) return false;
+				if (!checking) view.highlightSelection();
 				return true;
 			},
 		});
