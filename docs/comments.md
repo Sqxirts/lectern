@@ -20,6 +20,27 @@ Machine-readable data sits in a `%%scope` block. Obsidian renders `%% %%` as not
 Check whether this is on the midterm.
 ```
 
+A highlight with no note gets the body `_No note yet._`, so the section never looks broken. Lectern reads that line back as an empty note, and the card offers **Add note**.
+
+## Frontmatter
+
+Lectern rewrites the frontmatter on every save:
+
+```yaml
+---
+title: Comments on lecture-3.pptx
+type: reference
+area: meta
+source: Courses/lecture-3.pptx
+open_comments: 4
+resolved_comments: 1
+tags:
+  - annotation
+---
+```
+
+`area` comes from the source file's top-level folder. The counts are there for the comment index: `Comments.base` lists every note tagged `annotation` whose name ends in `.comments.md`, and sorts by `open_comments`. Edits you make to the frontmatter by hand are overwritten on the next save; the body below it is yours.
+
 ## Anchors
 
 Anchors follow the W3C Web Annotation TextQuoteSelector pattern: the exact quote plus about 30 characters either side. On open, resolution tries, in order:
