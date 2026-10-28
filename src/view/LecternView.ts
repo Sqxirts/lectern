@@ -1,4 +1,4 @@
-import { FileView, Notice, Scope, TFile, WorkspaceLeaf } from "obsidian";
+import { FileView, Menu, Notice, Scope, TFile, WorkspaceLeaf } from "obsidian";
 import { VIEW_TYPE_LECTERN, classify, type FileKind } from "../constants";
 import type { LecternSettings } from "../settings";
 import { Renderer, type RenderContext, type ToolbarItem } from "../renderers/Renderer";
@@ -9,6 +9,7 @@ import { PptxRenderer } from "../renderers/PptxRenderer";
 import { Toolbar } from "./Toolbar";
 import { ZoomController } from "./ZoomController";
 import { FIND_SHORTCUT, FindController } from "../find/FindController";
+import { saveExport } from "../export/exportNote";
 import { CommentStore } from "../comments/CommentStore";
 import { CommentRail } from "../comments/CommentRail";
 import { CommentSession, type CommentHost } from "../comments/CommentSession";
@@ -256,6 +257,60 @@ export class LecternView extends FileView {
 		void this.comments?.highlightSelection();
 	}
 
+	// ----- export ---------------------------------------------------------
+
+	/** Copy the whole file to the clipboard as markdown. */
+	async copyAsMarkdown(): Promise<void> {
+		const markdown = await this.exportText();
+		if (markdown === null) return;
+		await navigator.clipboard.writeText(markdown);
+		new Notice("Copied as Markdown.");
+	}
+
+	/** Write the file's markdown to a note next to it and open that note. */
+	async saveAsNote(): Promise<void> {
+		const file = this.file;
+		const markdown = await this.exportText();
+		if (!file || markdown === null) return;
+		try {
+			const note = await saveExport(this.app, file, markdown);
+			new Notice(`Saved ${note.path}`);
+			await this.app.workspace.getLeaf("split").openFile(note);
+		} catch (error) {
+			new Notice("Could not save the note. See the console for details.");
+			console.error("[lectern] export failed", error);
+		}
+	}
+
+	/** True when the export commands apply to the open file. */
+	get canExport(): boolean {
+		return this.renderer?.canExport() ?? false;
+	}
+
+	/** The markdown for the open file, or null (with a notice saying why). */
+	private async exportText(): Promise<string | null> {
+		if (!this.renderer?.canExport()) {
+			new Notice("Only decks, documents and workbooks can be exported.");
+			return null;
+		}
+		try {
+			const markdown = await this.renderer.exportMarkdown();
+			if (markdown?.trim()) return markdown;
+			new Notice("No text found to export.");
+		} catch (error) {
+			new Notice("Could not export this file. See the console for details.");
+			console.error("[lectern] export failed", error);
+		}
+		return null;
+	}
+
+	private showExportMenu(event: MouseEvent): void {
+		const menu = new Menu();
+		menu.addItem((item) => item.setTitle("Copy as Markdown").setIcon("copy").onClick(() => void this.copyAsMarkdown()));
+		menu.addItem((item) => item.setTitle("Save as Markdown note").setIcon("file-text").onClick(() => void this.saveAsNote()));
+		menu.showAtMouseEvent(event);
+	}
+
 	toggleResolved(): void {
 		this.comments?.toggleResolved();
 	}
@@ -329,7 +384,18 @@ export class LecternView extends FileView {
 			},
 		];
 
-		this.toolbar.render([zoomGroup, this.renderer?.toolbarItems() ?? [], findGroup, commentGroup]);
+		const exportGroup: ToolbarItem[] = this.canExport
+			? [
+					{
+						id: "export",
+						label: "Copy this file as markdown, or save it as a note",
+						text: "Export",
+						onClick: (event) => this.showExportMenu(event),
+					},
+				]
+			: [];
+
+		this.toolbar.render([zoomGroup, this.renderer?.toolbarItems() ?? [], findGroup, exportGroup, commentGroup]);
 	}
 }
 

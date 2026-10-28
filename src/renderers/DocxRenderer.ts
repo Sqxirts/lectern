@@ -1,5 +1,6 @@
 import { renderAsync } from "docx-preview";
 import { Renderer } from "./Renderer";
+import { docxToMarkdown } from "../export/docxMarkdown";
 
 const PAGE_CLASS = "lectern-docx-page";
 
@@ -42,6 +43,14 @@ export class DocxRenderer extends Renderer {
 			body.dataset.scopeKind = "docx";
 			body.dataset.scopeIndex = "1";
 		}
+	}
+
+	async exportMarkdown(): Promise<string | null> {
+		return docxToMarkdown(await this.ctx.app.vault.readBinary(this.ctx.file));
+	}
+
+	canExport(): boolean {
+		return true;
 	}
 
 	wrapperClass(): string | null {

@@ -17,7 +17,8 @@ export interface ToolbarItem {
 	label: string;
 	/** Short glyph shown on the button. */
 	text: string;
-	onClick: () => void | Promise<void>;
+	/** The click event is passed for items that open a menu at the button. */
+	onClick: (event: MouseEvent) => void | Promise<void>;
 	/** Rendered in a pressed state when true. */
 	active?: boolean;
 	disabled?: boolean;
@@ -66,6 +67,16 @@ export abstract class Renderer {
 	/** True when the current state blocks commenting, e.g. a code file being edited. */
 	commentingBlocked(): string | null {
 		return null;
+	}
+
+	/** Whether `exportMarkdown` has anything to give, so the toolbar can show Export. */
+	canExport(): boolean {
+		return false;
+	}
+
+	/** The file as markdown, or null when this kind of file has nothing to export. */
+	exportMarkdown(): Promise<string | null> {
+		return Promise.resolve(null);
 	}
 
 	/** Release listeners, workers, object URLs. */

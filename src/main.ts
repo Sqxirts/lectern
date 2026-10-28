@@ -93,6 +93,28 @@ export default class LecternPlugin extends Plugin {
 		});
 
 		this.addCommand({
+			id: "copy-as-markdown",
+			name: "Copy as Markdown",
+			checkCallback: (checking) => {
+				const view = this.app.workspace.getActiveViewOfType(LecternView);
+				if (!view?.canExport) return false;
+				if (!checking) void view.copyAsMarkdown();
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: "save-as-markdown-note",
+			name: "Save as Markdown note",
+			checkCallback: (checking) => {
+				const view = this.app.workspace.getActiveViewOfType(LecternView);
+				if (!view?.canExport) return false;
+				if (!checking) void view.saveAsNote();
+				return true;
+			},
+		});
+
+		this.addCommand({
 			id: "find-in-file",
 			name: "Find in file",
 			checkCallback: (checking) => {
