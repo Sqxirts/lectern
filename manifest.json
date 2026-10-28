@@ -1,7 +1,7 @@
 {
 	"id": "lectern",
 	"name": "Lectern",
-	"version": "1.2.0",
+	"version": "1.3.0",
 	"minAppVersion": "1.14.0",
 	"description": "Preview Word, Excel, PowerPoint and 130+ code files with selectable slide text, and add Word-style margin comments to them and to PDFs, saved as Markdown in your vault.",
 	"author": "sqxirts",
