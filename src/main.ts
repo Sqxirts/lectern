@@ -5,10 +5,12 @@ import { LecternView } from "./view/LecternView";
 import { PdfCommentManager } from "./pdf/PdfCommentManager";
 import type { PdfCommentController } from "./pdf/PdfCommentController";
 import { patchPdfContextMenu } from "./pdf/pdfContextMenu";
+import { openCommentIndex } from "./comments/openCommentIndex";
 
 /** What the comment commands need, from either a Lectern view or a PDF tab. */
 interface CommentTarget {
 	startComment(): void;
+	highlightSelection(): void;
 	toggleResolved(): void;
 	openSidecar(): Promise<void>;
 	reloadComments(): Promise<void>;
@@ -52,6 +54,17 @@ export default class LecternPlugin extends Plugin {
 		});
 
 		this.addCommand({
+			id: "highlight-selection",
+			name: "Highlight selection",
+			checkCallback: (checking) => {
+				const view = this.activeCommentTarget();
+				if (!view) return false;
+				if (!checking) view.highlightSelection();
+				return true;
+			},
+		});
+
+		this.addCommand({
 			id: "open-comment-note",
 			name: "Open the comment note for this file",
 			checkCallback: (checking) => {
@@ -69,6 +82,34 @@ export default class LecternPlugin extends Plugin {
 				const view = this.activeCommentTarget();
 				if (!view) return false;
 				if (!checking) view.toggleResolved();
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: "open-comment-index",
+			name: "Open the comment index",
+			callback: () => void openCommentIndex(this.app, this.settings.sidecarFolder),
+		});
+
+		this.addCommand({
+			id: "copy-as-markdown",
+			name: "Copy as Markdown",
+			checkCallback: (checking) => {
+				const view = this.app.workspace.getActiveViewOfType(LecternView);
+				if (!view?.canExport) return false;
+				if (!checking) void view.copyAsMarkdown();
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: "save-as-markdown-note",
+			name: "Save as Markdown note",
+			checkCallback: (checking) => {
+				const view = this.app.workspace.getActiveViewOfType(LecternView);
+				if (!view?.canExport) return false;
+				if (!checking) void view.saveAsNote();
 				return true;
 			},
 		});

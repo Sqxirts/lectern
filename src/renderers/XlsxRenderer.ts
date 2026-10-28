@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import { Renderer } from "./Renderer";
+import { workbookToMarkdown } from "../export/xlsxMarkdown";
 
 /** Beyond this a sheet is truncated, so a stray cell at row 1,048,576 can't hang the view. */
 const MAX_ROWS = 5000;
@@ -139,6 +140,14 @@ export class XlsxRenderer extends Renderer {
 		}
 
 		return { spans, covered };
+	}
+
+	async exportMarkdown(): Promise<string | null> {
+		return workbookToMarkdown(await this.ctx.app.vault.readBinary(this.ctx.file));
+	}
+
+	canExport(): boolean {
+		return true;
 	}
 
 	wrapperClass(): string | null {

@@ -142,6 +142,10 @@ export class PdfCommentController {
 		this.session?.startComment();
 	}
 
+	highlightSelection(): void {
+		void this.session?.highlightSelection();
+	}
+
 	async openSidecar(): Promise<void> {
 		await this.session?.openSidecar();
 	}

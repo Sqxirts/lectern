@@ -679,6 +679,15 @@ td.lectern-highlight {
 	color: var(--text-muted);
 }
 
+/* A highlight with no note: just the meta line and the buttons. */
+.lectern-card.is-highlight .lectern-card-body:empty {
+	display: none;
+}
+
+.lectern-card.is-highlight .lectern-card-meta {
+	margin-bottom: 4px;
+}
+
 .lectern-card-body {
 	white-space: pre-wrap;
 	word-break: break-word;
