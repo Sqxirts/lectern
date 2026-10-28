@@ -20,7 +20,7 @@ export function commentIndexBase(): string {
 		"filters:",
 		"  and:",
 		"    - 'file.hasTag(\"annotation\")'",
-		"    - 'file.name.endsWith(\".comments.md\")'",
+		"    - 'file.path.endsWith(\".comments.md\")'",
 		"properties:",
 		"  source:",
 		"    displayName: Source file",

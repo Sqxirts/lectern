@@ -29,6 +29,8 @@ describe("comment index base", () => {
 		const base = parse(commentIndexBase());
 		expect(base.views.map((v: { name: string }) => v.name)).toEqual(["Needs attention", "All annotated files"]);
 		expect(base.filters.and).toContain('file.hasTag("annotation")');
+		// file.name is not a plain string in Bases, so endsWith on it matches nothing; file.path is.
+		expect(base.filters.and).toContain('file.path.endsWith(".comments.md")');
 		for (const view of base.views) expect(view.order).toContain("open_comments");
 	});
 });
