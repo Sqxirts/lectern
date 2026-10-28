@@ -5,6 +5,7 @@ import { LecternView } from "./view/LecternView";
 import { PdfCommentManager } from "./pdf/PdfCommentManager";
 import type { PdfCommentController } from "./pdf/PdfCommentController";
 import { patchPdfContextMenu } from "./pdf/pdfContextMenu";
+import { openCommentIndex } from "./comments/openCommentIndex";
 
 /** What the comment commands need, from either a Lectern view or a PDF tab. */
 interface CommentTarget {
@@ -83,6 +84,12 @@ export default class LecternPlugin extends Plugin {
 				if (!checking) view.toggleResolved();
 				return true;
 			},
+		});
+
+		this.addCommand({
+			id: "open-comment-index",
+			name: "Open the comment index",
+			callback: () => void openCommentIndex(this.app, this.settings.sidecarFolder),
 		});
 
 		this.addCommand({
